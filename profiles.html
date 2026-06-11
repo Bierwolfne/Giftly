@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giftly – Your People</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:      #FDF8F2;
+      --ink:        #1A1410;
+      --blush:      #F2A28A;
+      --blush-dark: #D97B5C;
+      --muted:      #7A6F68;
+      --border:     #E8E0D8;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .nav-link {
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .page {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+
+    .page-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blush-dark);
+      margin-bottom: 0.75rem;
+    }
+
+    .page h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-sub {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+
+    .add-form {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .add-form h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      background: var(--cream);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--blush-dark);
+    }
+
+    .btn-primary {
+      background: var(--blush);
+      color: var(--ink);
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: var(--blush-dark);
+      color: var(--cream);
+      transform: translateY(-1px);
+    }
+
+    .profiles-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .profile-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .profile-avatar {
+      width: 48px;
+      height: 48px;
+      background: var(--blush);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .profile-info { flex: 1; }
+
+    .profile-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .profile-detail {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .profile-remove {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0.3rem;
+    }
+
+    .profile-remove:hover { color: #e53e3e; }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">Giftly</a>
+    <a href="index.html" class="nav-link">← Home</a>
+  </nav>
+
+  <div class="page">
+    <p class="page-eyebrow">Step 2 of 3</p>
+    <h1>Add your people</h1>
+    <p class="page-sub">Add the people you'd like to send gifts to. We'll remind you of their birthdays and special occasions.</p>
+
+    <div class="add-form">
+      <h2>Add someone new</h2>
+      <div class="form-row">
+        <div class="field">
+          <label>Name</label>
+          <input type="text" id="pName" placeholder="e.g. Mom" />
+        </div>
+        <div class="field">
+          <label>Relationship</label>
+          <select id="pRelation">
+            <option value="">Select one</option>
+            <option>Mom</option>
+            <option>Dad</option>
+            <option>Partner</option>
+            <option>Friend</option>
+            <option>Sibling</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Birthday</label>
+          <input type="date" id="pBirthday" />
+        </div>
+        <div class="field">
+          <label>Gift budget</label>
+          <select id="pBudget">
+            <option value="">Select range</option>
+            <option>Under $25</option>
+            <option>$25 – $50</option>
+            <option>$50 – $100</option>
+            <option>$100+</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addProfile()">+ Add person</button>
+    </div>
+
+    <div class="profiles-list" id="profilesList">
+      <div class="empty-state" id="emptyState">No people added yet. Add your first person above!</div>
+    </div>
+  </div>
+
+  <script>
+    const profiles = [];
+
+    const relationEmoji = {
+      'Mom': '👩', 'Dad': '👨', 'Partner': '💑',
+      'Friend': '🤝', 'Sibling': '👫', 'Other': '🎁'
+    };
+
+    function addProfile() {
+      const name = document.getElementById('pName').value.trim();
+      const relation = document.getElementById('pRelation').value;
+      const birthday = document.getElementById('pBirthday').value;
+      const budget = document.getElementById('pBudget').value;
+
+      if (!name || !relation) {
+        alert('Please enter a name and relationship.');
+        return;
+      }
+
+      profiles.push({ name, relation, birthday, budget });
+      renderProfiles();
+
+      document.getElementById('pName').value = '';
+      document.getElementById('pRelation').value = '';
+      document.getElementById('pBirthday').value = '';
+      document.getElementById('pBudget').value = '';
+    }
+
+    function removeProfile(index) {
+      profiles.splice(index, 1);
+      renderProfiles();
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return 'No birthday set';
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    }
+
+    function renderProfiles() {
+      const list = document.getElementById('profilesList');
+      const empty = document.getElementById('emptyState');
+
+      if (profiles.length === 0) {
+        list.innerHTML = '<div class="empty-state" id="emptyState">No people added yet. Add your first person above!</div>';
+        return;
+      }
+
+      list.innerHTML = profiles.map((p, i) => `
+        <div class="profile-card">
+          <div class="profile-avatar">${relationEmoji[p.relation] || '🎁'}</div>
+          <div class="profile-info">
+            <div class="profile-name">${p.name} · ${p.relation}</div>
+            <div class="profile-detail">🎂 ${formatDate(p.birthday)} · Budget: ${p.budget || 'Not set'}</div>
+          </div>
+          <button class="profile-remove" onclick="removeProfile(${i})">✕</button>
+        </div>
+      `).join('');
+    }
+  </script>
+
+</body>
+</html>
