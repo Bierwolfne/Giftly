@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giftly</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:   #FDF8F2;
+      --ink:     #1A1410;
+      --blush:   #F2A28A;
+      --blush-dark: #D97B5C;
+      --muted:   #7A6F68;
+      --border:  #E8E0D8;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .nav-cta {
+      background: var(--ink);
+      color: var(--cream);
+      border: none;
+      padding: 0.55rem 1.3rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+
+    .nav-cta:hover { background: var(--blush-dark); }
+
+    .hero {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 6rem 2rem 4rem;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blush-dark);
+      margin-bottom: 1.4rem;
+    }
+
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.6rem, 6vw, 4.2rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.4rem;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--blush-dark);
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--blush);
+      color: var(--ink);
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: var(--blush-dark);
+      color: var(--cream);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+      padding: 0.8rem 2rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+
+    .btn-secondary:hover { border-color: var(--ink); }
+
+    .how {
+      max-width: 900px;
+      margin: 4rem auto;
+      padding: 0 2rem;
+    }
+
+    .section-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+    }
+
+    .step {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 1.6rem;
+    }
+
+    .step-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .step h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .step p {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      padding: 3rem 2rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <span class="logo">Giftly</span>
+    <a href="signup.html" class="nav-cta">Get started</a>
+  </nav>
+
+  <section class="hero">
+    <span class="hero-eyebrow">Automatic gift giving</span>
+    <h1>Never miss a moment that <em>matters.</em></h1>
+    <p>Giftly remembers the people you love and sends them something thoughtful — automatically — on the days that count.</p>
+    <div class="cta-group">
+      <a href="signup.html" class="btn-primary">Start for free</a>
+      <a href="#how" class="btn-secondary">See how it works</a>
+    </div>
+  </section>
+
+  <section class="how" id="how">
+    <p class="section-label">How it works</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">👤</div>
+        <h3>Add someone</h3>
+        <p>Create a profile for mom, your best friend, or your partner. Add their birthday, interests, and address.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">🎁</div>
+        <h3>We find the gift</h3>
+        <p>Giftly picks something thoughtful from curated shops on Etsy, Amazon, and more — matched to who they are.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">📦</div>
+        <h3>It arrives on time</h3>
+        <p>The gift ships straight to them, on the right day, with a personal note from you. You get the credit.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Giftly — Built with HTML & CSS</p>
+  </footer>
+
+</body>
+</html>
