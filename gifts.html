@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giftly – Browse Gifts</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:      #FDF8F2;
+      --ink:        #1A1410;
+      --blush:      #F2A28A;
+      --blush-dark: #D97B5C;
+      --muted:      #7A6F68;
+      --border:     #E8E0D8;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--cream);
+      z-index: 10;
+    }
+
+    .logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .nav-link {
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .nav-link:hover { color: var(--ink); }
+
+    .saved-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--ink);
+      color: var(--cream);
+      padding: 0.5rem 1.1rem;
+      border-radius: 100px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+    .saved-badge:hover { background: var(--blush-dark); }
+
+    .saved-count {
+      background: var(--blush);
+      color: var(--ink);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.05rem 0.45rem;
+      min-width: 1.2rem;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    /* Page header */
+    .page-header {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 2rem 1.5rem;
+    }
+
+    .page-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blush-dark);
+      margin-bottom: 0.6rem;
+    }
+
+    .page-header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.02em;
+    }
+
+    .page-sub {
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Filters bar */
+    .filters-bar {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .categories {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .cat-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.45rem 1rem;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .cat-chip:hover {
+      border-color: var(--blush-dark);
+      color: var(--blush-dark);
+    }
+
+    .cat-chip.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--cream);
+    }
+
+    .budget-filter {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .budget-filter select {
+      padding: 0.42rem 0.8rem;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.86rem;
+      color: var(--ink);
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .budget-filter select:focus { border-color: var(--blush-dark); }
+
+    /* Gift grid */
+    .gift-grid-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .results-count {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .gift-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .gift-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+
+    .gift-card:hover {
+      box-shadow: 0 6px 24px rgba(26,20,16,0.09);
+      transform: translateY(-2px);
+    }
+
+    .gift-card.saved {
+      border-color: var(--blush);
+      box-shadow: 0 0 0 2px var(--blush);
+    }
+
+    .gift-thumb {
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      flex-shrink: 0;
+    }
+
+    .gift-body {
+      padding: 1.1rem 1.2rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .gift-source {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .gift-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.05rem;
+      line-height: 1.3;
+      margin-bottom: 0.4rem;
+    }
+
+    .gift-desc {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.55;
+      flex: 1;
+      margin-bottom: 1rem;
+    }
+
+    .gift-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .gift-price {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .btn-save {
+      padding: 0.45rem 1rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1.5px solid var(--blush);
+      background: transparent;
+      color: var(--blush-dark);
+    }
+
+    .btn-save:hover {
+      background: var(--blush);
+      color: var(--ink);
+    }
+
+    .btn-save.saved {
+      background: var(--blush);
+      color: var(--ink);
+      border-color: var(--blush);
+    }
+
+    .btn-save.saved:hover {
+      background: #e88060;
+      border-color: #e88060;
+    }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 5rem 2rem;
+      color: var(--muted);
+    }
+
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    .empty p {
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Saved drawer */
+    .saved-drawer {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      background: var(--ink);
+      color: var(--cream);
+      border-radius: 14px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.92rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .saved-drawer.visible { transform: translateX(-50%) translateY(0); }
+
+    .drawer-text { flex: 1; }
+    .drawer-text strong { font-weight: 600; }
+
+    .drawer-cta {
+      background: var(--blush);
+      color: var(--ink);
+      border: none;
+      padding: 0.5rem 1.1rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .drawer-cta:hover { background: var(--blush-dark); color: var(--cream); }
+
+    @media (max-width: 600px) {
+      nav { padding: 1.2rem 1.25rem; }
+      .page-header { padding: 2rem 1.25rem 1rem; }
+      .filters-bar { padding: 1rem 1.25rem; gap: 1rem; }
+      .gift-grid-wrap { padding: 1.5rem 1.25rem; }
+      .gift-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    }
+
+    @media (max-width: 420px) {
+      .gift-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">Giftly</a>
+    <div class="nav-right">
+      <a href="profiles.html" class="nav-link">My people</a>
+      <button class="saved-badge" onclick="scrollToSaved()">
+        🎁 Saved <span class="saved-count" id="savedCount">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <p class="page-eyebrow">Gift catalog</p>
+    <h1>Browse gifts by category</h1>
+    <p class="page-sub">Curated picks from Etsy, Amazon, and boutique shops — ready to send with one click.</p>
+  </div>
+
+  <div class="filters-bar">
+    <div class="categories" id="categories">
+      <button class="cat-chip active" data-cat="all" onclick="setCategory('all', this)">✨ All</button>
+      <button class="cat-chip" data-cat="tech" onclick="setCategory('tech', this)">💻 Tech</button>
+      <button class="cat-chip" data-cat="home" onclick="setCategory('home', this)">🏡 Home</button>
+      <button class="cat-chip" data-cat="selfcare" onclick="setCategory('selfcare', this)">🛁 Self-Care</button>
+      <button class="cat-chip" data-cat="books" onclick="setCategory('books', this)">📚 Books</button>
+      <button class="cat-chip" data-cat="food" onclick="setCategory('food', this)">🍫 Food & Drink</button>
+      <button class="cat-chip" data-cat="outdoor" onclick="setCategory('outdoor', this)">🌿 Outdoors</button>
+      <button class="cat-chip" data-cat="experience" onclick="setCategory('experience', this)">🎟 Experiences</button>
+    </div>
+    <div class="budget-filter">
+      <span>Budget</span>
+      <select id="budgetFilter" onchange="renderGifts()">
+        <option value="all">Any price</option>
+        <option value="25">Under $25</option>
+        <option value="50">Under $50</option>
+        <option value="100">Under $100</option>
+        <option value="101">$100+</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="gift-grid-wrap">
+    <p class="results-count" id="resultsCount"></p>
+    <div class="gift-grid" id="giftGrid"></div>
+    <div class="empty" id="emptyState" style="display:none">
+      <div class="empty-icon">🔍</div>
+      <p>No gifts match your filters.<br>Try a different category or budget range.</p>
+    </div>
+  </div>
+
+  <div class="saved-drawer" id="savedDrawer">
+    <div class="drawer-text"><strong id="drawerCount">0</strong> gift<span id="drawerPlural">s</span> saved</div>
+    <button class="drawer-cta">View saved list →</button>
+  </div>
+
+  <script>
+    const GIFTS = [
+      // Tech
+      { id: 1,  cat: 'tech',       name: 'Portable Charger 20,000mAh',      desc: 'Charges phones, earbuds, and tablets. Slim, airline-safe, dual USB-C.',  price: 38,  source: 'Amazon',   icon: '🔋', bg: '#EFF6FF' },
+      { id: 2,  cat: 'tech',       name: 'Kindle Paperwhite',                desc: 'Glare-free reading, weeks of battery, adjustable warm light.',            price: 140, source: 'Amazon',   icon: '📖', bg: '#EFF6FF' },
+      { id: 3,  cat: 'tech',       name: 'Tile Mate Tracker (4-pack)',        desc: 'Never lose keys, wallet, or bag again. Works with Alexa & Google.',      price: 60,  source: 'Amazon',   icon: '📍', bg: '#EFF6FF' },
+      { id: 4,  cat: 'tech',       name: 'Noise-Cancelling Earbuds',          desc: 'Studio-quality sound, 28-hr battery, IPX5 water resistance.',            price: 89,  source: 'Amazon',   icon: '🎧', bg: '#EFF6FF' },
+      { id: 5,  cat: 'tech',       name: 'Smart LED Desk Lamp',              desc: 'Adjustable color temp, wireless charging pad, USB-A port.',              price: 44,  source: 'Amazon',   icon: '💡', bg: '#EFF6FF' },
+      { id: 6,  cat: 'tech',       name: 'Mini Instant Photo Printer',        desc: 'Print wallet-size photos from any phone. Comes with paper rolls.',       price: 55,  source: 'Amazon',   icon: '📷', bg: '#EFF6FF' },
+
+      // Home
+      { id: 7,  cat: 'home',       name: 'Linen Throw Blanket',              desc: 'Organic woven linen, ultra-breathable, comes in 6 earthy tones.',       price: 68,  source: 'Etsy',     icon: '🧣', bg: '#FFF7ED' },
+      { id: 8,  cat: 'home',       name: 'Monogram Ceramic Mug Set',         desc: 'Hand-thrown stoneware, set of two, dishwasher safe.',                    price: 42,  source: 'Etsy',     icon: '☕', bg: '#FFF7ED' },
+      { id: 9,  cat: 'home',       name: 'Beeswax Taper Candle Bundle',      desc: '12 hand-dipped tapers in terracotta, sage, and ivory.',                 price: 28,  source: 'Etsy',     icon: '🕯️', bg: '#FFF7ED' },
+      { id: 10, cat: 'home',       name: 'Custom Illustrated House Portrait', desc: 'Watercolor illustration of their home, framed and ready to hang.',      price: 95,  source: 'Etsy',     icon: '🏠', bg: '#FFF7ED' },
+      { id: 11, cat: 'home',       name: 'Bamboo Cutting Board Set',         desc: 'Three graduated sizes with juice groove, food-safe finish.',             price: 34,  source: 'Amazon',   icon: '🪵', bg: '#FFF7ED' },
+      { id: 12, cat: 'home',       name: 'Pressed Botanicals Wall Art',      desc: 'Real dried flowers sealed in glass frames, set of three.',              price: 72,  source: 'Etsy',     icon: '🌸', bg: '#FFF7ED' },
+
+      // Self-Care
+      { id: 13, cat: 'selfcare',   name: 'Aromatherapy Bath Salts Set',      desc: 'Five mineral-rich blends with lavender, eucalyptus, and rose.',         price: 35,  source: 'Etsy',     icon: '🛁', bg: '#FDF4F4' },
+      { id: 14, cat: 'selfcare',   name: 'Jade Facial Roller & Gua Sha',     desc: 'Authentic jade stone, reduces puffiness, includes silk bag.',           price: 26,  source: 'Amazon',   icon: '💚', bg: '#FDF4F4' },
+      { id: 15, cat: 'selfcare',   name: 'Weighted Eye Mask',                desc: 'Lavender-scented microbeads, blocks light, soothes headaches.',         price: 24,  source: 'Amazon',   icon: '😴', bg: '#FDF4F4' },
+      { id: 16, cat: 'selfcare',   name: 'Luxury Soap & Lotion Gift Set',    desc: 'Six artisan soaps and two body creams in a keepsake box.',              price: 58,  source: 'Etsy',     icon: '🧴', bg: '#FDF4F4' },
+      { id: 17, cat: 'selfcare',   name: 'Silk Pillowcase (Queen)',          desc: '100% mulberry silk, reduces hair frizz and skin creasing.',             price: 39,  source: 'Amazon',   icon: '🌙', bg: '#FDF4F4' },
+      { id: 18, cat: 'selfcare',   name: 'Scalp Massager & Hair Oil Set',    desc: 'Stainless steel massager plus a blend of rosemary and castor oil.',     price: 32,  source: 'Etsy',     icon: '💆', bg: '#FDF4F4' },
+
+      // Books
+      { id: 19, cat: 'books',      name: 'Custom Leather Journal',           desc: 'Hand-stitched, personalized with name or initials, 200 lined pages.',   price: 45,  source: 'Etsy',     icon: '📓', bg: '#F0FDF4' },
+      { id: 20, cat: 'books',      name: 'Bookend Pair – Arch Marble',       desc: 'Solid marble arch bookends, holds 8–10 books, two colorways.',          price: 54,  source: 'Etsy',     icon: '🗿', bg: '#F0FDF4' },
+      { id: 21, cat: 'books',      name: 'Illustrated Poetry Collection',    desc: 'A curated anthology of contemporary poets with full-page artwork.',      price: 28,  source: 'Bookshop', icon: '✍️', bg: '#F0FDF4' },
+      { id: 22, cat: 'books',      name: 'Magnetic Bookmark Set (6-pack)',   desc: 'Hand-painted botanical motifs, holds 80 pages, no snag design.',        price: 16,  source: 'Etsy',     icon: '🔖', bg: '#F0FDF4' },
+      { id: 23, cat: 'books',      name: 'Smyth-Sewn Sketchbook A5',        desc: 'Lay-flat binding, 180gsm cream paper, elastic closure.',                price: 22,  source: 'Etsy',     icon: '🎨', bg: '#F0FDF4' },
+      { id: 24, cat: 'books',      name: 'Reading Light Clip-On',           desc: 'Rechargeable, 3 brightness levels, book-safe soft beam.',               price: 19,  source: 'Amazon',   icon: '🔦', bg: '#F0FDF4' },
+
+      // Food & Drink
+      { id: 25, cat: 'food',       name: 'Artisan Hot Sauce Collection',     desc: 'Six small-batch sauces ranging from mild to fiery, handcrafted labels.',price: 48,  source: 'Etsy',     icon: '🌶️', bg: '#FFF8F0' },
+      { id: 26, cat: 'food',       name: 'Single-Origin Coffee Subscription',desc: 'Three months of freshly roasted beans from rotating farms worldwide.',  price: 72,  source: 'Etsy',     icon: '☕', bg: '#FFF8F0' },
+      { id: 27, cat: 'food',       name: 'Sea Salt Caramel Sampler',         desc: 'Twelve handmade caramels in seasonal flavors, ships in a gift box.',    price: 30,  source: 'Etsy',     icon: '🍬', bg: '#FFF8F0' },
+      { id: 28, cat: 'food',       name: 'Specialty Tea Tin Collection',     desc: 'Eight loose-leaf teas with a bamboo infuser and printed steeping guide.',price: 38,  source: 'Etsy',     icon: '🍵', bg: '#FFF8F0' },
+      { id: 29, cat: 'food',       name: 'Craft Olive Oil Trio',             desc: 'Cold-pressed EVOO, chili, and truffle infused — from a family farm.',   price: 55,  source: 'Etsy',     icon: '🫒', bg: '#FFF8F0' },
+      { id: 30, cat: 'food',       name: 'Dark Chocolate Tasting Box',       desc: 'Ten single-origin bars with tasting notes, curated by chocolatiers.',   price: 42,  source: 'Etsy',     icon: '🍫', bg: '#FFF8F0' },
+
+      // Outdoor
+      { id: 31, cat: 'outdoor',    name: 'Enamel Camping Mug Set',           desc: 'Speckled enamel, 12oz, heat-resistant handle, nesting-friendly.',      price: 32,  source: 'Etsy',     icon: '⛺', bg: '#F0FFF4' },
+      { id: 32, cat: 'outdoor',    name: 'Seed Packet Collection',           desc: 'Heirloom varieties — tomato, basil, sunflower, and wildflower mix.',    price: 22,  source: 'Etsy',     icon: '🌱', bg: '#F0FFF4' },
+      { id: 33, cat: 'outdoor',    name: 'Compact Binoculars 10x25',        desc: 'Waterproof, fog-proof, neck strap included, great for hiking or birds.', price: 47,  source: 'Amazon',   icon: '🔭', bg: '#F0FFF4' },
+      { id: 34, cat: 'outdoor',    name: 'National Parks Scratch Map',       desc: 'Scratch off each park as you visit, 24×17 poster with landmarks.',      price: 26,  source: 'Amazon',   icon: '🗺️', bg: '#F0FFF4' },
+      { id: 35, cat: 'outdoor',    name: 'Packable Rain Poncho',             desc: 'Folds to palm-size, recycled nylon, 10 colors, one-size-fits-most.',    price: 19,  source: 'Amazon',   icon: '🌧️', bg: '#F0FFF4' },
+      { id: 36, cat: 'outdoor',    name: 'Hammock – Ultralight',             desc: 'Holds 400lbs, sets up in 2 minutes, comes with compression sack.',      price: 65,  source: 'Amazon',   icon: '🌴', bg: '#F0FFF4' },
+
+      // Experiences
+      { id: 37, cat: 'experience', name: 'Online Cooking Class Gift Card',   desc: 'Access to 700+ live and on-demand classes from world-class chefs.',     price: 80,  source: 'Goldbelly',icon: '👨‍🍳', bg: '#F5F0FF' },
+      { id: 38, cat: 'experience', name: 'Pottery Wheel Class (2 tickets)',   desc: 'Beginner-friendly, all materials included, take home your creations.',  price: 120, source: 'Local',    icon: '🏺', bg: '#F5F0FF' },
+      { id: 39, cat: 'experience', name: 'Virtual Wine Tasting',             desc: 'Sommelier-led tasting — three bottles shipped, streamed live Saturday.', price: 95,  source: 'Vivino',   icon: '🍷', bg: '#F5F0FF' },
+      { id: 40, cat: 'experience', name: 'Spa Day Voucher ($100)',           desc: 'Redeemable at 2,000+ spas nationwide. Valid 12 months from purchase.',  price: 100, source: 'SpaFinder', icon: '💆', bg: '#F5F0FF' },
+      { id: 41, cat: 'experience', name: 'Sunset Sailing Trip (2 people)',   desc: '2-hour sail with champagne toast, available in 30+ coastal cities.',   price: 150, source: 'Airbnb',   icon: '⛵', bg: '#F5F0FF' },
+      { id: 42, cat: 'experience', name: 'Stargazing Night Kit',             desc: 'Guided star map, cozy blanket, thermos, and constellation cards.',      price: 62,  source: 'Etsy',     icon: '🌠', bg: '#F5F0FF' },
+    ];
+
+    let activeCategory = 'all';
+    let savedIds = new Set();
+
+    function setCategory(cat, el) {
+      activeCategory = cat;
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderGifts();
+    }
+
+    function getBudgetMax() {
+      const v = document.getElementById('budgetFilter').value;
+      if (v === 'all') return Infinity;
+      if (v === '101') return Infinity;
+      return parseInt(v);
+    }
+
+    function getBudgetMin() {
+      const v = document.getElementById('budgetFilter').value;
+      return v === '101' ? 100 : 0;
+    }
+
+    function renderGifts() {
+      const max = getBudgetMax();
+      const min = getBudgetMin();
+
+      const filtered = GIFTS.filter(g => {
+        const catMatch = activeCategory === 'all' || g.cat === activeCategory;
+        const budgetMatch = g.price >= min && g.price <= max;
+        return catMatch && budgetMatch;
+      });
+
+      const count = document.getElementById('resultsCount');
+      const grid = document.getElementById('giftGrid');
+      const empty = document.getElementById('emptyState');
+
+      count.textContent = `${filtered.length} gift${filtered.length !== 1 ? 's' : ''}`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      grid.innerHTML = filtered.map(g => `
+        <div class="gift-card${savedIds.has(g.id) ? ' saved' : ''}" id="card-${g.id}">
+          <div class="gift-thumb" style="background:${g.bg}">${g.icon}</div>
+          <div class="gift-body">
+            <p class="gift-source">${g.source}</p>
+            <h3 class="gift-name">${g.name}</h3>
+            <p class="gift-desc">${g.desc}</p>
+            <div class="gift-footer">
+              <span class="gift-price">$${g.price}</span>
+              <button class="btn-save${savedIds.has(g.id) ? ' saved' : ''}" onclick="toggleSave(${g.id})">
+                ${savedIds.has(g.id) ? '✓ Saved' : '+ Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleSave(id) {
+      if (savedIds.has(id)) {
+        savedIds.delete(id);
+      } else {
+        savedIds.add(id);
+      }
+      updateSavedUI();
+      renderGifts();
+    }
+
+    function updateSavedUI() {
+      const n = savedIds.size;
+      document.getElementById('savedCount').textContent = n;
+      document.getElementById('drawerCount').textContent = n;
+      document.getElementById('drawerPlural').textContent = n === 1 ? '' : 's';
+
+      const drawer = document.getElementById('savedDrawer');
+      if (n > 0) {
+        drawer.classList.add('visible');
+      } else {
+        drawer.classList.remove('visible');
+      }
+    }
+
+    function scrollToSaved() {
+      // placeholder — would open saved list view
+    }
+
+    renderGifts();
+  </script>
+
+</body>
+</html>
