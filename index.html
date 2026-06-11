@@ -55,6 +55,21 @@
 
     .nav-cta:hover { background: var(--blush-dark); }
 
+    .nav-secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+      padding: 0.55rem 1.3rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s;
+    }
+    .nav-secondary:hover { border-color: var(--ink); }
+
     .hero {
       max-width: 720px;
       margin: 0 auto;
@@ -195,7 +210,7 @@
 
   <nav>
     <span class="logo">Giftly</span>
-    <a href="gifts.html" class="nav-link" style="font-size:0.9rem;color:var(--muted);text-decoration:none;margin-right:1rem;">Browse gifts</a>
+    <a href="gifts.html" class="nav-secondary">Browse gifts</a>
     <a href="signup.html" class="nav-cta">Get started</a>
   </nav>
 

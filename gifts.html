@@ -275,6 +275,32 @@
       font-weight: 600;
     }
 
+    .gift-name a {
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .gift-name a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    .gift-footer { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+
+    .gift-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+    .btn-view {
+      padding: 0.45rem 0.95rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--ink);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-view:hover { border-color: var(--ink); }
+
     .btn-save {
       padding: 0.45rem 1rem;
       border-radius: 100px;
@@ -429,60 +455,60 @@
   <script>
     const GIFTS = [
       // Tech
-      { id: 1,  cat: 'tech',       name: 'Portable Charger 20,000mAh',      desc: 'Charges phones, earbuds, and tablets. Slim, airline-safe, dual USB-C.',  price: 38,  source: 'Amazon',   icon: '🔋', bg: '#EFF6FF' },
-      { id: 2,  cat: 'tech',       name: 'Kindle Paperwhite',                desc: 'Glare-free reading, weeks of battery, adjustable warm light.',            price: 140, source: 'Amazon',   icon: '📖', bg: '#EFF6FF' },
-      { id: 3,  cat: 'tech',       name: 'Tile Mate Tracker (4-pack)',        desc: 'Never lose keys, wallet, or bag again. Works with Alexa & Google.',      price: 60,  source: 'Amazon',   icon: '📍', bg: '#EFF6FF' },
-      { id: 4,  cat: 'tech',       name: 'Noise-Cancelling Earbuds',          desc: 'Studio-quality sound, 28-hr battery, IPX5 water resistance.',            price: 89,  source: 'Amazon',   icon: '🎧', bg: '#EFF6FF' },
-      { id: 5,  cat: 'tech',       name: 'Smart LED Desk Lamp',              desc: 'Adjustable color temp, wireless charging pad, USB-A port.',              price: 44,  source: 'Amazon',   icon: '💡', bg: '#EFF6FF' },
-      { id: 6,  cat: 'tech',       name: 'Mini Instant Photo Printer',        desc: 'Print wallet-size photos from any phone. Comes with paper rolls.',       price: 55,  source: 'Amazon',   icon: '📷', bg: '#EFF6FF' },
+      { id: 1,  cat: 'tech',       name: 'Anker 622 Magnetic Battery (MagSafe)',     desc: '5,000mAh MagSafe-compatible battery. Snaps onto iPhone 12 and up — no cable needed. Folds flat.',                          price: 36,  source: 'Amazon',     icon: '🔋', bg: '#EFF6FF', url: 'https://www.amazon.com/dp/B09NWBBQMZ' },
+      { id: 2,  cat: 'tech',       name: 'Kindle Paperwhite (16 GB, 2023)',           desc: '7" 300ppi glare-free display, adjustable warm light, weeks of battery life, IPX8 waterproof.',                               price: 160, source: 'Amazon',     icon: '📖', bg: '#EFF6FF', url: 'https://www.amazon.com/dp/B0CFPJYX1H' },
+      { id: 3,  cat: 'tech',       name: 'Apple AirTag 4-Pack',                       desc: 'Precision Finding with Ultra Wideband. Works with iPhone\'s Find My app. CR2032 battery, IPX6.',                             price: 89,  source: 'Amazon',     icon: '📍', bg: '#EFF6FF', url: 'https://www.amazon.com/dp/B0932QJ2JZ' },
+      { id: 4,  cat: 'tech',       name: 'Sony WF-C700N True Wireless Earbuds',       desc: 'Active noise cancellation, 15-hr battery (35hr with case), multipoint pairing, IPX4 sweat-resistant.',                       price: 100, source: 'Amazon',     icon: '🎧', bg: '#EFF6FF', url: 'https://www.amazon.com/dp/B0BWTL6HMH' },
+      { id: 5,  cat: 'tech',       name: 'Govee LED Desk Lamp with Wireless Charger', desc: 'Touch-dimming, 4 color temperature modes, 10W Qi charging pad in the base, USB-A port.',                                     price: 46,  source: 'Amazon',     icon: '💡', bg: '#EFF6FF', url: 'https://www.amazon.com/s?k=govee+desk+lamp+wireless+charger' },
+      { id: 6,  cat: 'tech',       name: 'Fujifilm Instax Mini Link 2 Printer',       desc: 'Prints credit-card-size photos from your phone via Bluetooth. Includes a 10-shot film pack.',                                price: 90,  source: 'Amazon',     icon: '📷', bg: '#EFF6FF', url: 'https://www.amazon.com/dp/B09P4KG5ZC' },
 
       // Home
-      { id: 7,  cat: 'home',       name: 'Linen Throw Blanket',              desc: 'Organic woven linen, ultra-breathable, comes in 6 earthy tones.',       price: 68,  source: 'Etsy',     icon: '🧣', bg: '#FFF7ED' },
-      { id: 8,  cat: 'home',       name: 'Monogram Ceramic Mug Set',         desc: 'Hand-thrown stoneware, set of two, dishwasher safe.',                    price: 42,  source: 'Etsy',     icon: '☕', bg: '#FFF7ED' },
-      { id: 9,  cat: 'home',       name: 'Beeswax Taper Candle Bundle',      desc: '12 hand-dipped tapers in terracotta, sage, and ivory.',                 price: 28,  source: 'Etsy',     icon: '🕯️', bg: '#FFF7ED' },
-      { id: 10, cat: 'home',       name: 'Custom Illustrated House Portrait', desc: 'Watercolor illustration of their home, framed and ready to hang.',      price: 95,  source: 'Etsy',     icon: '🏠', bg: '#FFF7ED' },
-      { id: 11, cat: 'home',       name: 'Bamboo Cutting Board Set',         desc: 'Three graduated sizes with juice groove, food-safe finish.',             price: 34,  source: 'Amazon',   icon: '🪵', bg: '#FFF7ED' },
-      { id: 12, cat: 'home',       name: 'Pressed Botanicals Wall Art',      desc: 'Real dried flowers sealed in glass frames, set of three.',              price: 72,  source: 'Etsy',     icon: '🌸', bg: '#FFF7ED' },
+      { id: 7,  cat: 'home',       name: 'Stonewashed Linen Throw Blanket',           desc: 'European stonewashed linen, 50×70", OEKO-TEX certified. Gets softer with every wash. 8 earthy tones.',                      price: 68,  source: 'Etsy',       icon: '🧣', bg: '#FFF7ED', url: 'https://www.etsy.com/search?q=stonewashed+linen+throw+blanket' },
+      { id: 8,  cat: 'home',       name: 'Personalized Stoneware Mug Set (Set of 2)', desc: 'Hand-thrown stoneware with stamped name before firing. 14oz, microwave and dishwasher safe.',                                price: 44,  source: 'Etsy',       icon: '☕', bg: '#FFF7ED', url: 'https://www.etsy.com/search?q=personalized+stoneware+mug+set' },
+      { id: 9,  cat: 'home',       name: 'Hand-Dipped Beeswax Taper Candles (12-pk)', desc: '100% beeswax, 10" tall, 8-hr burn per taper. Light honey scent. Ships in terracotta, sage, and ivory.',                     price: 28,  source: 'Etsy',       icon: '🕯️', bg: '#FFF7ED', url: 'https://www.etsy.com/search?q=hand+dipped+beeswax+taper+candles' },
+      { id: 10, cat: 'home',       name: 'Custom Watercolor House Portrait',           desc: 'Artist-painted from your photo, delivered as an 8×10" archival print with a white mat. Ships in 7 days.',                    price: 95,  source: 'Etsy',       icon: '🏠', bg: '#FFF7ED', url: 'https://www.etsy.com/search?q=custom+house+portrait+watercolor' },
+      { id: 11, cat: 'home',       name: 'Totally Bamboo 3-Piece Cutting Board Set',  desc: 'Graduated S/M/L bamboo boards with juice groove. NSF certified, moisture-resistant.',                                         price: 35,  source: 'Amazon',     icon: '🪵', bg: '#FFF7ED', url: 'https://www.amazon.com/dp/B001Y0PUE0' },
+      { id: 12, cat: 'home',       name: 'Pressed Botanicals Framed Wall Art (3-pc)', desc: 'Real dried wildflowers sealed under glass in natural wood frames. 5×7" each, ready to hang.',                                price: 72,  source: 'Etsy',       icon: '🌸', bg: '#FFF7ED', url: 'https://www.etsy.com/search?q=pressed+flower+framed+wall+art+set' },
 
       // Self-Care
-      { id: 13, cat: 'selfcare',   name: 'Aromatherapy Bath Salts Set',      desc: 'Five mineral-rich blends with lavender, eucalyptus, and rose.',         price: 35,  source: 'Etsy',     icon: '🛁', bg: '#FDF4F4' },
-      { id: 14, cat: 'selfcare',   name: 'Jade Facial Roller & Gua Sha',     desc: 'Authentic jade stone, reduces puffiness, includes silk bag.',           price: 26,  source: 'Amazon',   icon: '💚', bg: '#FDF4F4' },
-      { id: 15, cat: 'selfcare',   name: 'Weighted Eye Mask',                desc: 'Lavender-scented microbeads, blocks light, soothes headaches.',         price: 24,  source: 'Amazon',   icon: '😴', bg: '#FDF4F4' },
-      { id: 16, cat: 'selfcare',   name: 'Luxury Soap & Lotion Gift Set',    desc: 'Six artisan soaps and two body creams in a keepsake box.',              price: 58,  source: 'Etsy',     icon: '🧴', bg: '#FDF4F4' },
-      { id: 17, cat: 'selfcare',   name: 'Silk Pillowcase (Queen)',          desc: '100% mulberry silk, reduces hair frizz and skin creasing.',             price: 39,  source: 'Amazon',   icon: '🌙', bg: '#FDF4F4' },
-      { id: 18, cat: 'selfcare',   name: 'Scalp Massager & Hair Oil Set',    desc: 'Stainless steel massager plus a blend of rosemary and castor oil.',     price: 32,  source: 'Etsy',     icon: '💆', bg: '#FDF4F4' },
+      { id: 13, cat: 'selfcare',   name: 'Dr Teal\'s Foaming Bath Soak Gift Set',     desc: '5 Epsom salt soaks — Pure Epsom, Lavender, Eucalyptus, Pink Himalayan, and Charcoal. 34oz each.',                          price: 30,  source: 'Amazon',     icon: '🛁', bg: '#FDF4F4', url: 'https://www.amazon.com/s?k=dr+teals+foaming+bath+soak+gift+set+5+pack' },
+      { id: 14, cat: 'selfcare',   name: 'Jade Roller & Gua Sha Set',                 desc: 'Authentic nephrite jade. Cools and de-puffs skin. Includes velvet pouch and how-to card.',                                    price: 26,  source: 'Amazon',     icon: '💚', bg: '#FDF4F4', url: 'https://www.amazon.com/s?k=jade+roller+gua+sha+set+nephrite' },
+      { id: 15, cat: 'selfcare',   name: 'Alaska Bear Weighted Silk Eye Mask',        desc: '22-momme 100% mulberry silk, gentle microbead weight, adjustable strap. Blocks all light.',                                  price: 24,  source: 'Amazon',     icon: '😴', bg: '#FDF4F4', url: 'https://www.amazon.com/s?k=alaska+bear+weighted+silk+sleep+mask' },
+      { id: 16, cat: 'selfcare',   name: 'Artisan Soap & Body Cream Gift Box',        desc: 'Six goat-milk soaps and two shea-butter body creams in seasonal scents. Ribbon-wrapped gift box.',                            price: 58,  source: 'Etsy',       icon: '🧴', bg: '#FDF4F4', url: 'https://www.etsy.com/search?q=artisan+soap+lotion+gift+box+set' },
+      { id: 17, cat: 'selfcare',   name: 'Slip Pure Silk Pillowcase – Queen',         desc: '22-momme Slipsilk, prevents hair breakage and morning face creases. Machine washable. 12 colors.',                            price: 89,  source: 'Amazon',     icon: '🌙', bg: '#FDF4F4', url: 'https://www.amazon.com/s?k=slip+pure+silk+pillowcase+queen' },
+      { id: 18, cat: 'selfcare',   name: 'Rosemary & Castor Hair Growth Gift Set',    desc: 'Stainless scalp massager + cold-pressed castor oil + rosemary growth serum. Handmade, vegan.',                                price: 32,  source: 'Etsy',       icon: '💆', bg: '#FDF4F4', url: 'https://www.etsy.com/search?q=rosemary+castor+oil+hair+growth+gift+set' },
 
       // Books
-      { id: 19, cat: 'books',      name: 'Custom Leather Journal',           desc: 'Hand-stitched, personalized with name or initials, 200 lined pages.',   price: 45,  source: 'Etsy',     icon: '📓', bg: '#F0FDF4' },
-      { id: 20, cat: 'books',      name: 'Bookend Pair – Arch Marble',       desc: 'Solid marble arch bookends, holds 8–10 books, two colorways.',          price: 54,  source: 'Etsy',     icon: '🗿', bg: '#F0FDF4' },
-      { id: 21, cat: 'books',      name: 'Illustrated Poetry Collection',    desc: 'A curated anthology of contemporary poets with full-page artwork.',      price: 28,  source: 'Bookshop', icon: '✍️', bg: '#F0FDF4' },
-      { id: 22, cat: 'books',      name: 'Magnetic Bookmark Set (6-pack)',   desc: 'Hand-painted botanical motifs, holds 80 pages, no snag design.',        price: 16,  source: 'Etsy',     icon: '🔖', bg: '#F0FDF4' },
-      { id: 23, cat: 'books',      name: 'Smyth-Sewn Sketchbook A5',        desc: 'Lay-flat binding, 180gsm cream paper, elastic closure.',                price: 22,  source: 'Etsy',     icon: '🎨', bg: '#F0FDF4' },
-      { id: 24, cat: 'books',      name: 'Reading Light Clip-On',           desc: 'Rechargeable, 3 brightness levels, book-safe soft beam.',               price: 19,  source: 'Amazon',   icon: '🔦', bg: '#F0FDF4' },
+      { id: 19, cat: 'books',      name: 'Personalized Leather-Bound Journal',        desc: 'Hand-stitched full-grain leather, name stamped in gold foil. 200 acid-free lined pages, A5.',                                price: 45,  source: 'Etsy',       icon: '📓', bg: '#F0FDF4', url: 'https://www.etsy.com/search?q=personalized+leather+journal+monogram+handmade' },
+      { id: 20, cat: 'books',      name: 'Marble Arch Bookend Pair',                  desc: 'Solid white Carrara marble, 6" arch. Heavy enough for a full shelf. Ships as a pair.',                                        price: 54,  source: 'Etsy',       icon: '🗿', bg: '#F0FDF4', url: 'https://www.etsy.com/search?q=marble+arch+bookends' },
+      { id: 21, cat: 'books',      name: 'The Sun and Her Flowers – Rupi Kaur',       desc: 'Illustrated poetry collection. 256 pages, hardcover. Bestselling poetry debut about growth and healing.',                    price: 22,  source: 'Amazon',     icon: '✍️', bg: '#F0FDF4', url: 'https://www.amazon.com/dp/1449486797' },
+      { id: 22, cat: 'books',      name: 'Botanical Magnetic Bookmark Set (6-pack)',  desc: 'Hand-painted wildflower prints on 300gsm card, laminated with strong magnet. No page snag.',                                 price: 16,  source: 'Etsy',       icon: '🔖', bg: '#F0FDF4', url: 'https://www.etsy.com/search?q=botanical+magnetic+bookmark+set' },
+      { id: 23, cat: 'books',      name: 'Leuchtturm1917 Hardcover Sketchbook A5',    desc: 'Lay-flat smyth-sewn binding, 120 g/m² blank pages, elastic closure and ribbon marker.',                                      price: 22,  source: 'Amazon',     icon: '🎨', bg: '#F0FDF4', url: 'https://www.amazon.com/dp/B07MBHJ7JH' },
+      { id: 24, cat: 'books',      name: 'Glocusent LED Neck Reading Light',          desc: 'Rechargeable hands-free book light. 3 color temps × 5 brightness levels. 60-hr battery life.',                               price: 20,  source: 'Amazon',     icon: '🔦', bg: '#F0FDF4', url: 'https://www.amazon.com/dp/B09HNM3B97' },
 
       // Food & Drink
-      { id: 25, cat: 'food',       name: 'Artisan Hot Sauce Collection',     desc: 'Six small-batch sauces ranging from mild to fiery, handcrafted labels.',price: 48,  source: 'Etsy',     icon: '🌶️', bg: '#FFF8F0' },
-      { id: 26, cat: 'food',       name: 'Single-Origin Coffee Subscription',desc: 'Three months of freshly roasted beans from rotating farms worldwide.',  price: 72,  source: 'Etsy',     icon: '☕', bg: '#FFF8F0' },
-      { id: 27, cat: 'food',       name: 'Sea Salt Caramel Sampler',         desc: 'Twelve handmade caramels in seasonal flavors, ships in a gift box.',    price: 30,  source: 'Etsy',     icon: '🍬', bg: '#FFF8F0' },
-      { id: 28, cat: 'food',       name: 'Specialty Tea Tin Collection',     desc: 'Eight loose-leaf teas with a bamboo infuser and printed steeping guide.',price: 38,  source: 'Etsy',     icon: '🍵', bg: '#FFF8F0' },
-      { id: 29, cat: 'food',       name: 'Craft Olive Oil Trio',             desc: 'Cold-pressed EVOO, chili, and truffle infused — from a family farm.',   price: 55,  source: 'Etsy',     icon: '🫒', bg: '#FFF8F0' },
-      { id: 30, cat: 'food',       name: 'Dark Chocolate Tasting Box',       desc: 'Ten single-origin bars with tasting notes, curated by chocolatiers.',   price: 42,  source: 'Etsy',     icon: '🍫', bg: '#FFF8F0' },
+      { id: 25, cat: 'food',       name: 'Yellowbird Hot Sauce Variety 6-Pack',       desc: 'Six small-batch sauces: Habanero, Ghost Pepper, Jalapeño, Serrano, Blue Agave Sriracha & Classic.',                          price: 45,  source: 'Amazon',     icon: '🌶️', bg: '#FFF8F0', url: 'https://www.amazon.com/s?k=yellowbird+hot+sauce+variety+pack' },
+      { id: 26, cat: 'food',       name: '3-Month Single-Origin Coffee Subscription', desc: 'Freshly roasted beans bi-weekly from rotating farms worldwide. Whole bean or ground. Cancel anytime.',                        price: 72,  source: 'Etsy',       icon: '☕', bg: '#FFF8F0', url: 'https://www.etsy.com/search?q=single+origin+coffee+subscription+gift' },
+      { id: 27, cat: 'food',       name: 'McCrea\'s Handmade Caramels (12-piece)',    desc: 'Small-batch all-natural caramels in bourbon, vanilla sea salt, and ginger cardamom. Gift-boxed.',                             price: 30,  source: 'Amazon',     icon: '🍬', bg: '#FFF8F0', url: 'https://www.amazon.com/s?k=mccreas+handmade+caramels+gift+box' },
+      { id: 28, cat: 'food',       name: 'Vahdam India Starter Tea Kit (8 teas)',     desc: '8 full-leaf teas direct from Indian estates — Assam, Darjeeling, Chai blends & herbal. Bamboo infuser included.',             price: 36,  source: 'Amazon',     icon: '🍵', bg: '#FFF8F0', url: 'https://www.amazon.com/dp/B01NAFDTWK' },
+      { id: 29, cat: 'food',       name: 'Brightland ALIVE + AWAKE Olive Oil Duo',   desc: 'Two 375ml bottles — Alive (bright cold-pressed EVOO) and Awake (herb-infused). California-grown, single-harvest.',            price: 55,  source: 'Amazon',     icon: '🫒', bg: '#FFF8F0', url: 'https://www.amazon.com/s?k=brightland+olive+oil+duo' },
+      { id: 30, cat: 'food',       name: 'Compartés Artisan Chocolate Bar Set (10)',  desc: '10 single-origin bars from LA\'s Compartés — unique flavors like Rose & Champagne, Avocado Toast, and Horchata.',             price: 48,  source: 'Amazon',     icon: '🍫', bg: '#FFF8F0', url: 'https://www.amazon.com/s?k=compartes+chocolate+bar+gift+set' },
 
       // Outdoor
-      { id: 31, cat: 'outdoor',    name: 'Enamel Camping Mug Set',           desc: 'Speckled enamel, 12oz, heat-resistant handle, nesting-friendly.',      price: 32,  source: 'Etsy',     icon: '⛺', bg: '#F0FFF4' },
-      { id: 32, cat: 'outdoor',    name: 'Seed Packet Collection',           desc: 'Heirloom varieties — tomato, basil, sunflower, and wildflower mix.',    price: 22,  source: 'Etsy',     icon: '🌱', bg: '#F0FFF4' },
-      { id: 33, cat: 'outdoor',    name: 'Compact Binoculars 10x25',        desc: 'Waterproof, fog-proof, neck strap included, great for hiking or birds.', price: 47,  source: 'Amazon',   icon: '🔭', bg: '#F0FFF4' },
-      { id: 34, cat: 'outdoor',    name: 'National Parks Scratch Map',       desc: 'Scratch off each park as you visit, 24×17 poster with landmarks.',      price: 26,  source: 'Amazon',   icon: '🗺️', bg: '#F0FFF4' },
-      { id: 35, cat: 'outdoor',    name: 'Packable Rain Poncho',             desc: 'Folds to palm-size, recycled nylon, 10 colors, one-size-fits-most.',    price: 19,  source: 'Amazon',   icon: '🌧️', bg: '#F0FFF4' },
-      { id: 36, cat: 'outdoor',    name: 'Hammock – Ultralight',             desc: 'Holds 400lbs, sets up in 2 minutes, comes with compression sack.',      price: 65,  source: 'Amazon',   icon: '🌴', bg: '#F0FFF4' },
+      { id: 31, cat: 'outdoor',    name: 'GSI Outdoors Enamel Mug Set (Set of 2)',    desc: 'Durable speckled enamel steel, 14oz each, rolled lip and loop handle. Classic camp aesthetic.',                               price: 28,  source: 'Amazon',     icon: '⛺', bg: '#F0FFF4', url: 'https://www.amazon.com/dp/B0015EMVO2' },
+      { id: 32, cat: 'outdoor',    name: 'Botanical Interests Heirloom Seed Set',     desc: '12 open-pollinated varieties — tomatoes, herbs, flowers & greens. Non-GMO. Printed on recycled paper.',                       price: 24,  source: 'Amazon',     icon: '🌱', bg: '#F0FFF4', url: 'https://www.amazon.com/s?k=botanical+interests+heirloom+seed+collection' },
+      { id: 33, cat: 'outdoor',    name: 'Nikon Aculon A211 Binoculars 10×42',        desc: 'Eco-glass multi-coated optics, rubber-armored body, long eye relief. Great for hiking, birding, concerts.',                  price: 75,  source: 'Amazon',     icon: '🔭', bg: '#F0FFF4', url: 'https://www.amazon.com/dp/B004JVKXAS' },
+      { id: 34, cat: 'outdoor',    name: 'Conquest Maps National Parks Scratch-Off',  desc: 'Large 24×17" poster. Scratch off all 63 National Parks as you visit. Foil artwork underneath.',                              price: 25,  source: 'Amazon',     icon: '🗺️', bg: '#F0FFF4', url: 'https://www.amazon.com/dp/B078H5LZSH' },
+      { id: 35, cat: 'outdoor',    name: 'Sea to Summit Nano Tarp Poncho',            desc: 'Silnylon, packs to 100g, doubles as emergency tarp. 10 snap closures, stuff sack included.',                                  price: 60,  source: 'Amazon',     icon: '🌧️', bg: '#F0FFF4', url: 'https://www.amazon.com/s?k=sea+to+summit+poncho+tarp' },
+      { id: 36, cat: 'outdoor',    name: 'ENO DoubleNest Hammock',                    desc: 'Holds up to 400 lbs. Sets up in under 2 minutes, weighs 19oz. Includes stuff sack and whoopie slings.',                       price: 70,  source: 'Amazon',     icon: '🌴', bg: '#F0FFF4', url: 'https://www.amazon.com/dp/B001L9T3PO' },
 
       // Experiences
-      { id: 37, cat: 'experience', name: 'Online Cooking Class Gift Card',   desc: 'Access to 700+ live and on-demand classes from world-class chefs.',     price: 80,  source: 'Goldbelly',icon: '👨‍🍳', bg: '#F5F0FF' },
-      { id: 38, cat: 'experience', name: 'Pottery Wheel Class (2 tickets)',   desc: 'Beginner-friendly, all materials included, take home your creations.',  price: 120, source: 'Local',    icon: '🏺', bg: '#F5F0FF' },
-      { id: 39, cat: 'experience', name: 'Virtual Wine Tasting',             desc: 'Sommelier-led tasting — three bottles shipped, streamed live Saturday.', price: 95,  source: 'Vivino',   icon: '🍷', bg: '#F5F0FF' },
-      { id: 40, cat: 'experience', name: 'Spa Day Voucher ($100)',           desc: 'Redeemable at 2,000+ spas nationwide. Valid 12 months from purchase.',  price: 100, source: 'SpaFinder', icon: '💆', bg: '#F5F0FF' },
-      { id: 41, cat: 'experience', name: 'Sunset Sailing Trip (2 people)',   desc: '2-hour sail with champagne toast, available in 30+ coastal cities.',   price: 150, source: 'Airbnb',   icon: '⛵', bg: '#F5F0FF' },
-      { id: 42, cat: 'experience', name: 'Stargazing Night Kit',             desc: 'Guided star map, cozy blanket, thermos, and constellation cards.',      price: 62,  source: 'Etsy',     icon: '🌠', bg: '#F5F0FF' },
+      { id: 37, cat: 'experience', name: 'MasterClass All-Access Annual Pass',        desc: 'Unlimited access to 180+ instructors: Gordon Ramsay, Serena Williams, Neil deGrasse Tyson, and more.',                        price: 120, source: 'MasterClass', icon: '👨‍🍳', bg: '#F5F0FF', url: 'https://www.masterclass.com/gift' },
+      { id: 38, cat: 'experience', name: 'Pottery Class for Two – Classpop',          desc: 'Beginner wheel-throwing with a local ceramicist. All clay included, take your pieces home. 200+ cities.',                     price: 120, source: 'Classpop',   icon: '🏺', bg: '#F5F0FF', url: 'https://www.classpop.com/pottery-classes' },
+      { id: 39, cat: 'experience', name: 'Virtual Wine Tasting with a Sommelier',     desc: 'Curated 3-bottle kit ships to their door. 90-min live Zoom tasting with a certified sommelier.',                              price: 95,  source: 'Airbnb',     icon: '🍷', bg: '#F5F0FF', url: 'https://www.airbnb.com/s/experiences?query=wine+tasting' },
+      { id: 40, cat: 'experience', name: 'SpaFinder Gift Card ($100)',                desc: 'Redeemable at 20,000+ spas and salons nationwide. No expiration. Delivered by email instantly.',                              price: 100, source: 'SpaFinder',  icon: '💆', bg: '#F5F0FF', url: 'https://www.spafinder.com/gift-cards' },
+      { id: 41, cat: 'experience', name: 'Airbnb Experience – Sunset Sail (2 guests)', desc: '2-hour sailing excursion with champagne for two. Available in 50+ coastal cities. Book directly on Airbnb.',                price: 150, source: 'Airbnb',     icon: '⛵', bg: '#F5F0FF', url: 'https://www.airbnb.com/s/experiences?query=sailing' },
+      { id: 42, cat: 'experience', name: 'Stargazing Night Gift Kit',                 desc: 'Personalized star map of a meaningful date, cozy blanket, insulated thermos, and printed constellation guide.',               price: 62,  source: 'Etsy',       icon: '🌠', bg: '#F5F0FF', url: 'https://www.etsy.com/search?q=stargazing+night+gift+kit+star+map' },
     ];
 
     let activeCategory = 'all';
@@ -532,16 +558,21 @@
       empty.style.display = 'none';
       grid.innerHTML = filtered.map(g => `
         <div class="gift-card${savedIds.has(g.id) ? ' saved' : ''}" id="card-${g.id}">
-          <div class="gift-thumb" style="background:${g.bg}">${g.icon}</div>
+          <a href="${g.url}" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none">
+            <div class="gift-thumb" style="background:${g.bg}">${g.icon}</div>
+          </a>
           <div class="gift-body">
             <p class="gift-source">${g.source}</p>
-            <h3 class="gift-name">${g.name}</h3>
+            <h3 class="gift-name"><a href="${g.url}" target="_blank" rel="noopener noreferrer">${g.name}</a></h3>
             <p class="gift-desc">${g.desc}</p>
             <div class="gift-footer">
               <span class="gift-price">$${g.price}</span>
-              <button class="btn-save${savedIds.has(g.id) ? ' saved' : ''}" onclick="toggleSave(${g.id})">
-                ${savedIds.has(g.id) ? '✓ Saved' : '+ Save'}
-              </button>
+              <div class="gift-actions">
+                <a href="${g.url}" target="_blank" rel="noopener noreferrer" class="btn-view">View ↗</a>
+                <button class="btn-save${savedIds.has(g.id) ? ' saved' : ''}" onclick="toggleSave(${g.id})">
+                  ${savedIds.has(g.id) ? '✓ Saved' : '+ Save'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
