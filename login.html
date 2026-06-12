@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Giftly – Create Account</title>
+  <title>Giftly – Log In</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,8 +44,8 @@
       font-size: 0.9rem;
       color: var(--muted);
       text-decoration: none;
+      transition: color 0.15s;
     }
-
     .nav-link:hover { color: var(--ink); }
 
     .page {
@@ -87,9 +87,7 @@
       line-height: 1.6;
     }
 
-    .field {
-      margin-bottom: 1.2rem;
-    }
+    .field { margin-bottom: 1.2rem; }
 
     .field label {
       display: block;
@@ -111,10 +109,7 @@
       outline: none;
       transition: border-color 0.2s;
     }
-
-    .field input:focus {
-      border-color: var(--blush-dark);
-    }
+    .field input:focus { border-color: var(--blush-dark); }
 
     .btn-primary {
       width: 100%;
@@ -130,46 +125,8 @@
       margin-top: 0.5rem;
       transition: background 0.2s, transform 0.15s;
     }
-
-    .btn-primary:hover {
-      background: var(--blush-dark);
-      color: var(--cream);
-      transform: translateY(-1px);
-    }
-
-    .divider {
-      text-align: center;
-      font-size: 0.82rem;
-      color: var(--muted);
-      margin: 1.5rem 0;
-      position: relative;
-    }
-
-    .divider::before, .divider::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      width: 40%;
-      height: 1px;
-      background: var(--border);
-    }
-
-    .divider::before { left: 0; }
-    .divider::after { right: 0; }
-
-    .login-link {
-      text-align: center;
-      font-size: 0.88rem;
-      color: var(--muted);
-    }
-
-    .login-link a {
-      color: var(--blush-dark);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .login-link a:hover { text-decoration: underline; }
+    .btn-primary:hover { background: var(--blush-dark); color: var(--cream); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
     .success-msg {
       display: none;
@@ -195,11 +152,31 @@
       margin-top: 1rem;
     }
 
-    .btn-primary:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
+    .divider {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin: 1.5rem 0;
+      position: relative;
     }
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+
+    .signup-link {
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .signup-link a { color: var(--blush-dark); text-decoration: none; font-weight: 500; }
+    .signup-link a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -211,48 +188,47 @@
 
   <div class="page">
     <div class="card">
-      <p class="card-eyebrow">Get started free</p>
-      <h1>Create your account</h1>
-      <p class="card-sub">Join Giftly and never miss a birthday, anniversary, or special moment again.</p>
-
-      <div class="field">
-        <label for="name">Full name</label>
-        <input type="text" id="name" placeholder="Your name" />
-      </div>
+      <p class="card-eyebrow">Welcome back</p>
+      <h1>Log in to Giftly</h1>
+      <p class="card-sub">Good to see you. Enter your details to pick up where you left off.</p>
 
       <div class="field">
         <label for="email">Email address</label>
-        <input type="email" id="email" placeholder="you@example.com" />
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
       </div>
 
       <div class="field">
         <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Create a password" />
+        <input type="password" id="password" placeholder="Your password" autocomplete="current-password" />
       </div>
 
-      <button class="btn-primary" id="submitBtn" onclick="handleSignup()">Create account</button>
+      <button class="btn-primary" id="submitBtn" onclick="handleLogin()">Log in</button>
 
       <div class="success-msg" id="successMsg">
-        🎉 Account created! Redirecting you now…
+        👋 Welcome back! Redirecting you now…
       </div>
 
       <div class="error-msg" id="errorMsg"></div>
 
       <div class="divider">or</div>
 
-      <p class="login-link">Already have an account? <a href="login.html">Log in</a></p>
+      <p class="signup-link">New to Giftly? <a href="signup.html">Create an account</a></p>
     </div>
   </div>
 
   <script>
-    async function handleSignup() {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const btn = document.getElementById('submitBtn');
-      const successMsg = document.getElementById('successMsg');
-      const errorMsg = document.getElementById('errorMsg');
+    document.getElementById('password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+    });
 
-      errorMsg.style.display = 'none';
+    async function handleLogin() {
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn        = document.getElementById('submitBtn');
+      const successMsg = document.getElementById('successMsg');
+      const errorMsg   = document.getElementById('errorMsg');
+
+      errorMsg.style.display  = 'none';
       successMsg.style.display = 'none';
 
       if (!email || !password) {
@@ -260,14 +236,14 @@
         return;
       }
 
-      btn.disabled = true;
-      btn.textContent = 'Creating account…';
+      btn.disabled    = true;
+      btn.textContent = 'Logging in…';
 
       try {
-        const res = await fetch('http://localhost:3000/signup', {
-          method: 'POST',
+        const res  = await fetch('http://localhost:3000/login', {
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
+          body:    JSON.stringify({ email, password }),
         });
 
         const data = await res.json();
@@ -275,23 +251,23 @@
         if (res.ok) {
           sessionStorage.setItem('giftlyEmail', data.email);
           successMsg.style.display = 'block';
-          setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
         } else {
           showError(data.error || 'Something went wrong. Please try again.');
-          btn.disabled = false;
-          btn.textContent = 'Create account';
+          btn.disabled    = false;
+          btn.textContent = 'Log in';
         }
       } catch (err) {
         showError('Could not reach the server. Make sure it\'s running on port 3000.');
-        btn.disabled = false;
-        btn.textContent = 'Create account';
+        btn.disabled    = false;
+        btn.textContent = 'Log in';
       }
     }
 
     function showError(msg) {
-      const errorMsg = document.getElementById('errorMsg');
-      errorMsg.textContent = msg;
-      errorMsg.style.display = 'block';
+      const el = document.getElementById('errorMsg');
+      el.textContent    = msg;
+      el.style.display  = 'block';
     }
   </script>
 

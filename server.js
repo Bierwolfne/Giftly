@@ -104,6 +104,28 @@ app.post('/signup', async (req, res) => {
   res.status(201).json({ message: 'Account created successfully.', email: normalizedEmail });
 });
 
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required.' });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await dbGet('SELECT email, passwordHash FROM users WHERE email = ?', [normalizedEmail]);
+
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+
+  res.json({ email: user.email });
+});
+
 app.post('/profiles', async (req, res) => {
   const { userEmail, name, relationship, birthday, giftBudget } = req.body;
 
