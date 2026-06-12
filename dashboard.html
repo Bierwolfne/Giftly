@@ -308,11 +308,137 @@
     }
     .banner a { color: var(--blush-dark); font-weight: 500; }
 
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 20, 16, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: #fff;
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 460px;
+      position: relative;
+      transform: translateY(20px) scale(0.98);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .modal-backdrop.open .modal { transform: translateY(0) scale(1); }
+
+    .modal-close {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      background: var(--cream);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+      color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-close:hover { background: var(--border); color: var(--ink); }
+
+    .modal-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blush-dark);
+      margin-bottom: 0.5rem;
+    }
+    .modal h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.7rem;
+      margin-bottom: 1.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .modal .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .modal .field { margin-bottom: 1rem; }
+    .modal .field:last-of-type { margin-bottom: 0; }
+    .modal .field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+    }
+    .modal .field input,
+    .modal .field select {
+      width: 100%;
+      padding: 0.72rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      background: var(--cream);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+    .modal .field input:focus,
+    .modal .field select:focus { border-color: var(--blush-dark); }
+
+    .modal-error {
+      display: none;
+      background: #FFF5F5;
+      border: 1px solid #FEB2B2;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.88rem;
+      color: #9B2C2C;
+      margin-bottom: 1rem;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--blush);
+      color: var(--ink);
+      border: none;
+      padding: 0.85rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1.25rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-submit:hover:not(:disabled) { background: var(--blush-dark); color: var(--cream); transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
     @media (max-width: 600px) {
       nav { padding: 1.2rem 1.25rem; }
       .page-header { padding: 2rem 1.25rem 1rem; }
       .stats-row { padding: 0 1.25rem 1.5rem; }
       .profile-grid-wrap { padding: 0 1.25rem 3rem; }
+      .modal { padding: 2rem 1.5rem; }
+      .modal .form-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -322,7 +448,7 @@
     <a href="index.html" class="logo">Giftly</a>
     <div class="nav-right">
       <a href="gifts.html" class="nav-link">Browse gifts</a>
-      <a href="profiles.html" class="nav-cta">+ Add person</a>
+      <button class="nav-cta" onclick="openModal()">+ Add person</button>
     </div>
   </nav>
 
@@ -330,11 +456,63 @@
     <!-- rendered by JS -->
   </div>
 
+  <div class="modal-backdrop" id="modalBackdrop" onclick="handleBackdropClick(event)">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+      <p class="modal-eyebrow">New profile</p>
+      <h2 id="modalTitle">Add someone</h2>
+
+      <div class="modal-error" id="modalError"></div>
+
+      <div class="form-row">
+        <div class="field">
+          <label for="mName">Name</label>
+          <input type="text" id="mName" placeholder="e.g. Mom" />
+        </div>
+        <div class="field">
+          <label for="mRelation">Relationship</label>
+          <select id="mRelation">
+            <option value="">Select one</option>
+            <option>Mom</option>
+            <option>Dad</option>
+            <option>Partner</option>
+            <option>Friend</option>
+            <option>Sibling</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="mBirthday">Birthday</label>
+          <input type="date" id="mBirthday" />
+        </div>
+        <div class="field">
+          <label for="mBudget">Gift budget</label>
+          <select id="mBudget">
+            <option value="">Select range</option>
+            <option>Under $25</option>
+            <option>$25 – $50</option>
+            <option>$50 – $100</option>
+            <option>$100+</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="modalSubmit" onclick="submitProfile()">Add person</button>
+    </div>
+  </div>
+
   <script>
     const relationEmoji = {
       'Mom': '👩', 'Dad': '👨', 'Partner': '💑',
       'Friend': '🤝', 'Sibling': '👫', 'Other': '🎁'
     };
+
+    let profiles = [];
+    let userEmail = null;
+
+    // ── Helpers ──────────────────────────────────────────────
 
     function daysUntilBirthday(birthdayStr) {
       if (!birthdayStr) return null;
@@ -380,12 +558,11 @@
             </div>
             ${daysBadge(days)}
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
     function renderSkeleton(count = 3) {
-      return Array.from({ length: count }, () => `
+      return `<div class="skeleton-grid">${Array.from({ length: count }, () => `
         <div class="skeleton-card">
           <div class="skeleton-top">
             <div class="skel skel-avatar"></div>
@@ -398,32 +575,147 @@
             <div class="skel skel-line skel-short" style="height:12px"></div>
             <div class="skel skel-badge"></div>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('')}
+      </div>`;
     }
 
-    function upcomingCount(profiles) {
-      return profiles.filter(p => {
+    // ── Grid & stats rendering ────────────────────────────────
+
+    function sortedProfiles() {
+      return [...profiles].sort((a, b) => {
+        const da = daysUntilBirthday(a.birthday) ?? 999;
+        const db = daysUntilBirthday(b.birthday) ?? 999;
+        return da - db;
+      });
+    }
+
+    function renderGrid() {
+      const gridWrap = document.getElementById('gridWrap');
+      if (!gridWrap) return;
+
+      if (profiles.length === 0) {
+        gridWrap.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">🎁</div>
+            <h2>No people yet</h2>
+            <p>Add the people you want to gift and we'll track their birthdays for you.</p>
+            <button class="add-btn" onclick="openModal()">Add your first person</button>
+          </div>`;
+        return;
+      }
+
+      gridWrap.innerHTML = `<div class="profile-grid">${sortedProfiles().map(renderCard).join('')}</div>`;
+    }
+
+    function renderStats() {
+      const el = document.getElementById('statsRow');
+      if (!el) return;
+      const soon = profiles.filter(p => {
         const d = daysUntilBirthday(p.birthday);
         return d !== null && d <= 30;
       }).length;
+      el.innerHTML = `
+        <div class="stat-chip"><strong>${profiles.length}</strong> ${profiles.length === 1 ? 'person' : 'people'} saved</div>
+        ${soon > 0 ? `<div class="stat-chip">🔔 <strong>${soon}</strong> birthday${soon === 1 ? '' : 's'} in the next 30 days</div>` : ''}`;
     }
+
+    // ── Modal ─────────────────────────────────────────────────
+
+    function openModal() {
+      document.getElementById('mName').value = '';
+      document.getElementById('mRelation').value = '';
+      document.getElementById('mBirthday').value = '';
+      document.getElementById('mBudget').value = '';
+      hideModalError();
+      document.getElementById('modalBackdrop').classList.add('open');
+      document.getElementById('mName').focus();
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    function closeModal() {
+      document.getElementById('modalBackdrop').classList.remove('open');
+      document.removeEventListener('keydown', handleEscape);
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target === e.currentTarget) closeModal();
+    }
+
+    function handleEscape(e) {
+      if (e.key === 'Escape') closeModal();
+    }
+
+    function showModalError(msg) {
+      const el = document.getElementById('modalError');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function hideModalError() {
+      const el = document.getElementById('modalError');
+      el.style.display = 'none';
+    }
+
+    async function submitProfile() {
+      const name         = document.getElementById('mName').value.trim();
+      const relationship = document.getElementById('mRelation').value;
+      const birthday     = document.getElementById('mBirthday').value;
+      const giftBudget   = document.getElementById('mBudget').value;
+      const btn          = document.getElementById('modalSubmit');
+
+      hideModalError();
+
+      if (!name || !relationship) {
+        showModalError('Please enter a name and relationship.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      try {
+        const res = await fetch('http://localhost:3000/profiles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userEmail, name, relationship, birthday, giftBudget }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showModalError(data.error || 'Could not save. Please try again.');
+          return;
+        }
+
+        profiles.push(data);
+        renderGrid();
+        renderStats();
+        closeModal();
+      } catch (err) {
+        showModalError('Could not reach the server. Make sure it\'s running on port 3000.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Add person';
+      }
+    }
+
+    // ── Init ──────────────────────────────────────────────────
 
     async function init() {
       const app = document.getElementById('app');
-      const email = sessionStorage.getItem('giftlyEmail');
+      userEmail = sessionStorage.getItem('giftlyEmail');
 
-      if (!email) {
+      if (!userEmail) {
         app.innerHTML = `
           <div style="max-width:1000px;margin:2rem auto;padding:0 2rem">
             <div class="banner">
-              No session found. <a href="signup.html">Sign up</a> or <a href="profiles.html">add people</a> to get started.
+              No session found. <a href="signup.html">Sign up</a> to get started.
             </div>
           </div>`;
         return;
       }
 
-      const firstName = email.split('@')[0];
+      const firstName = userEmail.split('@')[0];
 
       app.innerHTML = `
         <div class="page-header">
@@ -431,47 +723,20 @@
             <p class="page-eyebrow">Your dashboard</p>
             <h1>Hello, ${firstName} 👋</h1>
           </div>
-          <a href="profiles.html" class="add-btn">+ Add person</a>
+          <button class="add-btn" onclick="openModal()">+ Add person</button>
         </div>
         <div class="stats-row" id="statsRow"></div>
-        <div class="profile-grid-wrap">
-          <div class="skeleton-grid">${renderSkeleton(3)}</div>
+        <div class="profile-grid-wrap" id="gridWrap">
+          ${renderSkeleton(3)}
         </div>`;
 
       try {
-        const res = await fetch(`http://localhost:3000/profiles?email=${encodeURIComponent(email)}`);
-        const profiles = await res.json();
-
-        const soon = upcomingCount(profiles);
-        document.getElementById('statsRow').innerHTML = `
-          <div class="stat-chip"><strong>${profiles.length}</strong> ${profiles.length === 1 ? 'person' : 'people'} saved</div>
-          ${soon > 0 ? `<div class="stat-chip">🔔 <strong>${soon}</strong> birthday${soon === 1 ? '' : 's'} in the next 30 days</div>` : ''}
-        `;
-
-        const gridWrap = app.querySelector('.profile-grid-wrap');
-
-        if (profiles.length === 0) {
-          gridWrap.innerHTML = `
-            <div class="empty">
-              <div class="empty-icon">🎁</div>
-              <h2>No people yet</h2>
-              <p>Add the people you want to gift and we'll track their birthdays for you.</p>
-              <a href="profiles.html" class="add-btn">Add your first person</a>
-            </div>`;
-          return;
-        }
-
-        // Sort by soonest birthday first
-        profiles.sort((a, b) => {
-          const da = daysUntilBirthday(a.birthday) ?? 999;
-          const db = daysUntilBirthday(b.birthday) ?? 999;
-          return da - db;
-        });
-
-        gridWrap.innerHTML = `<div class="profile-grid">${profiles.map(renderCard).join('')}</div>`;
-
+        const res = await fetch(`http://localhost:3000/profiles?email=${encodeURIComponent(userEmail)}`);
+        profiles = await res.json();
+        renderStats();
+        renderGrid();
       } catch (err) {
-        app.querySelector('.profile-grid-wrap').innerHTML = `
+        document.getElementById('gridWrap').innerHTML = `
           <div class="empty">
             <div class="empty-icon">⚠️</div>
             <h2>Could not load profiles</h2>
