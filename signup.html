@@ -275,7 +275,7 @@
         if (res.ok) {
           sessionStorage.setItem('giftlyEmail', data.email);
           successMsg.style.display = 'block';
-          setTimeout(() => { window.location.href = 'profiles.html'; }, 1500);
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         } else {
           showError(data.error || 'Something went wrong. Please try again.');
           btn.disabled = false;
