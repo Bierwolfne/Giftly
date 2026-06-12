@@ -273,6 +273,7 @@
         const data = await res.json();
 
         if (res.ok) {
+          sessionStorage.setItem('giftlyEmail', data.email);
           successMsg.style.display = 'block';
           setTimeout(() => { window.location.href = 'profiles.html'; }, 1500);
         } else {

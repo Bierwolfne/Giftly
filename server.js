@@ -10,14 +10,29 @@ app.use(express.static(__dirname));
 
 const db = new sqlite3.Database('./giftly.db');
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS users (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    email        TEXT    UNIQUE NOT NULL,
-    passwordHash TEXT    NOT NULL,
-    createdAt    TEXT    NOT NULL
-  )
-`);
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      email        TEXT    UNIQUE NOT NULL,
+      passwordHash TEXT    NOT NULL,
+      createdAt    TEXT    NOT NULL
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS profiles (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      userEmail    TEXT    NOT NULL,
+      name         TEXT    NOT NULL,
+      relationship TEXT    NOT NULL,
+      birthday     TEXT,
+      giftBudget   TEXT,
+      createdAt    TEXT    NOT NULL,
+      FOREIGN KEY (userEmail) REFERENCES users(email)
+    )
+  `);
+});
 
 function dbGet(sql, params) {
   return new Promise((resolve, reject) => {
@@ -30,6 +45,12 @@ function dbRun(sql, params) {
     db.run(sql, params, function (err) {
       err ? reject(err) : resolve(this);
     });
+  });
+}
+
+function dbAll(sql, params) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)));
   });
 }
 
@@ -64,6 +85,41 @@ app.post('/signup', async (req, res) => {
   );
 
   res.status(201).json({ message: 'Account created successfully.', email: normalizedEmail });
+});
+
+app.post('/profiles', async (req, res) => {
+  const { userEmail, name, relationship, birthday, giftBudget } = req.body;
+
+  if (!userEmail || !name || !relationship) {
+    return res.status(400).json({ error: 'userEmail, name, and relationship are required.' });
+  }
+
+  const user = await dbGet('SELECT id FROM users WHERE email = ?', [userEmail.toLowerCase().trim()]);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found.' });
+  }
+
+  const result = await dbRun(
+    'INSERT INTO profiles (userEmail, name, relationship, birthday, giftBudget, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
+    [userEmail.toLowerCase().trim(), name.trim(), relationship, birthday || null, giftBudget || null, new Date().toISOString()]
+  );
+
+  res.status(201).json({ id: result.lastID, name: name.trim(), relationship, birthday: birthday || null, giftBudget: giftBudget || null });
+});
+
+app.get('/profiles', async (req, res) => {
+  const { email } = req.query;
+
+  if (!email) {
+    return res.status(400).json({ error: 'email query parameter is required.' });
+  }
+
+  const rows = await dbAll(
+    'SELECT id, name, relationship, birthday, giftBudget FROM profiles WHERE userEmail = ? ORDER BY createdAt ASC',
+    [email.toLowerCase().trim()]
+  );
+
+  res.json(rows);
 });
 
 app.listen(PORT, () => {

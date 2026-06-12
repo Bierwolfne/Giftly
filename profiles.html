@@ -256,36 +256,77 @@
   </div>
 
   <script>
-    const profiles = [];
-
     const relationEmoji = {
       'Mom': '👩', 'Dad': '👨', 'Partner': '💑',
       'Friend': '🤝', 'Sibling': '👫', 'Other': '🎁'
     };
 
-    function addProfile() {
-      const name = document.getElementById('pName').value.trim();
-      const relation = document.getElementById('pRelation').value;
-      const birthday = document.getElementById('pBirthday').value;
-      const budget = document.getElementById('pBudget').value;
+    const userEmail = sessionStorage.getItem('giftlyEmail');
 
-      if (!name || !relation) {
-        alert('Please enter a name and relationship.');
+    async function addProfile() {
+      const name = document.getElementById('pName').value.trim();
+      const relationship = document.getElementById('pRelation').value;
+      const birthday = document.getElementById('pBirthday').value;
+      const giftBudget = document.getElementById('pBudget').value;
+      const btn = document.querySelector('.btn-primary');
+
+      if (!name || !relationship) {
+        showFormError('Please enter a name and relationship.');
         return;
       }
 
-      profiles.push({ name, relation, birthday, budget });
-      renderProfiles();
+      if (!userEmail) {
+        showFormError('Session expired. Please sign up again.');
+        return;
+      }
 
-      document.getElementById('pName').value = '';
-      document.getElementById('pRelation').value = '';
-      document.getElementById('pBirthday').value = '';
-      document.getElementById('pBudget').value = '';
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      try {
+        const res = await fetch('http://localhost:3000/profiles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userEmail, name, relationship, birthday, giftBudget }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showFormError(data.error || 'Could not save profile.');
+          return;
+        }
+
+        clearFormError();
+        renderProfile(data);
+        document.getElementById('pName').value = '';
+        document.getElementById('pRelation').value = '';
+        document.getElementById('pBirthday').value = '';
+        document.getElementById('pBudget').value = '';
+      } catch (err) {
+        showFormError('Could not reach the server. Make sure it\'s running on port 3000.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '+ Add person';
+      }
     }
 
-    function removeProfile(index) {
-      profiles.splice(index, 1);
-      renderProfiles();
+    function renderProfile(p) {
+      const list = document.getElementById('profilesList');
+      const empty = document.getElementById('emptyState');
+      if (empty) empty.remove();
+
+      const card = document.createElement('div');
+      card.className = 'profile-card';
+      card.dataset.id = p.id;
+      card.innerHTML = `
+        <div class="profile-avatar">${relationEmoji[p.relationship] || '🎁'}</div>
+        <div class="profile-info">
+          <div class="profile-name">${p.name} · ${p.relationship}</div>
+          <div class="profile-detail">🎂 ${formatDate(p.birthday)} · Budget: ${p.giftBudget || 'Not set'}</div>
+        </div>
+      `;
+      list.appendChild(card);
     }
 
     function formatDate(dateStr) {
@@ -294,26 +335,34 @@
       return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
     }
 
-    function renderProfiles() {
-      const list = document.getElementById('profilesList');
-      const empty = document.getElementById('emptyState');
-
-      if (profiles.length === 0) {
-        list.innerHTML = '<div class="empty-state" id="emptyState">No people added yet. Add your first person above!</div>';
-        return;
+    function showFormError(msg) {
+      let el = document.getElementById('formError');
+      if (!el) {
+        el = document.createElement('p');
+        el.id = 'formError';
+        el.style.cssText = 'color:#9B2C2C;font-size:0.85rem;margin-top:0.75rem;';
+        document.querySelector('.btn-primary').insertAdjacentElement('afterend', el);
       }
-
-      list.innerHTML = profiles.map((p, i) => `
-        <div class="profile-card">
-          <div class="profile-avatar">${relationEmoji[p.relation] || '🎁'}</div>
-          <div class="profile-info">
-            <div class="profile-name">${p.name} · ${p.relation}</div>
-            <div class="profile-detail">🎂 ${formatDate(p.birthday)} · Budget: ${p.budget || 'Not set'}</div>
-          </div>
-          <button class="profile-remove" onclick="removeProfile(${i})">✕</button>
-        </div>
-      `).join('');
+      el.textContent = msg;
     }
+
+    function clearFormError() {
+      const el = document.getElementById('formError');
+      if (el) el.remove();
+    }
+
+    async function loadProfiles() {
+      if (!userEmail) return;
+      try {
+        const res = await fetch(`http://localhost:3000/profiles?email=${encodeURIComponent(userEmail)}`);
+        const data = await res.json();
+        data.forEach(renderProfile);
+      } catch (err) {
+        // Server offline — local-only mode, no action needed
+      }
+    }
+
+    loadProfiles();
   </script>
 
 </body>
