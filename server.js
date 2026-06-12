@@ -33,6 +33,9 @@ db.serialize(() => {
     )
   `);
 
+  // Migration: add interests column if it doesn't exist yet
+  db.run(`ALTER TABLE profiles ADD COLUMN interests TEXT`, () => {});
+
   db.run(`
     CREATE TABLE IF NOT EXISTS gifts (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -127,7 +130,7 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/profiles', async (req, res) => {
-  const { userEmail, name, relationship, birthday, giftBudget } = req.body;
+  const { userEmail, name, relationship, birthday, giftBudget, interests } = req.body;
 
   if (!userEmail || !name || !relationship) {
     return res.status(400).json({ error: 'userEmail, name, and relationship are required.' });
@@ -138,12 +141,16 @@ app.post('/profiles', async (req, res) => {
     return res.status(404).json({ error: 'User not found.' });
   }
 
+  const interestsJson = Array.isArray(interests) && interests.length > 0
+    ? JSON.stringify(interests)
+    : null;
+
   const result = await dbRun(
-    'INSERT INTO profiles (userEmail, name, relationship, birthday, giftBudget, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
-    [userEmail.toLowerCase().trim(), name.trim(), relationship, birthday || null, giftBudget || null, new Date().toISOString()]
+    'INSERT INTO profiles (userEmail, name, relationship, birthday, giftBudget, interests, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [userEmail.toLowerCase().trim(), name.trim(), relationship, birthday || null, giftBudget || null, interestsJson, new Date().toISOString()]
   );
 
-  res.status(201).json({ id: result.lastID, name: name.trim(), relationship, birthday: birthday || null, giftBudget: giftBudget || null });
+  res.status(201).json({ id: result.lastID, name: name.trim(), relationship, birthday: birthday || null, giftBudget: giftBudget || null, interests: interestsJson });
 });
 
 app.get('/profiles', async (req, res) => {
@@ -154,7 +161,7 @@ app.get('/profiles', async (req, res) => {
   }
 
   const rows = await dbAll(
-    'SELECT id, name, relationship, birthday, giftBudget FROM profiles WHERE userEmail = ? ORDER BY createdAt ASC',
+    'SELECT id, name, relationship, birthday, giftBudget, interests FROM profiles WHERE userEmail = ? ORDER BY createdAt ASC',
     [email.toLowerCase().trim()]
   );
 

@@ -432,6 +432,74 @@
     .btn-submit:hover:not(:disabled) { background: var(--blush-dark); color: var(--cream); transform: translateY(-1px); }
     .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    /* Interest chips (modal form) */
+    .interest-section { margin-top: 1rem; }
+    .interest-section > label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.6rem;
+    }
+    .interest-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .interest-chip {
+      position: relative;
+    }
+    .interest-chip input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .interest-chip label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: var(--cream);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .interest-chip input:checked + label {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--cream);
+    }
+    .interest-chip label:hover {
+      border-color: var(--muted);
+    }
+
+    /* Interest tags on profile cards */
+    .interest-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      padding-top: 0.75rem;
+    }
+    .interest-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 100px;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
     @media (max-width: 600px) {
       nav { padding: 1.2rem 1.25rem; }
       .page-header { padding: 2rem 1.25rem 1rem; }
@@ -499,6 +567,20 @@
         </div>
       </div>
 
+      <div class="interest-section">
+        <label>Interests</label>
+        <div class="interest-chips">
+          <div class="interest-chip"><input type="checkbox" id="mi-sports" value="Sports"><label for="mi-sports">🏃 Sports</label></div>
+          <div class="interest-chip"><input type="checkbox" id="mi-reading" value="Reading"><label for="mi-reading">📚 Reading</label></div>
+          <div class="interest-chip"><input type="checkbox" id="mi-tech" value="Tech"><label for="mi-tech">💻 Tech</label></div>
+          <div class="interest-chip"><input type="checkbox" id="mi-fashion" value="Fashion"><label for="mi-fashion">👗 Fashion</label></div>
+          <div class="interest-chip"><input type="checkbox" id="mi-gaming" value="Gaming"><label for="mi-gaming">🎮 Gaming</label></div>
+          <div class="interest-chip"><input type="checkbox" id="mi-travel" value="Travel"><label for="mi-travel">✈️ Travel</label></div>
+          <div class="interest-chip"><input type="checkbox" id="mi-cooking" value="Cooking"><label for="mi-cooking">🍳 Cooking</label></div>
+          <div class="interest-chip"><input type="checkbox" id="mi-music" value="Music"><label for="mi-music">🎵 Music</label></div>
+        </div>
+      </div>
+
       <button class="btn-submit" id="modalSubmit" onclick="submitProfile()">Add person</button>
     </div>
   </div>
@@ -507,6 +589,11 @@
     const relationEmoji = {
       'Mom': '👩', 'Dad': '👨', 'Partner': '💑',
       'Friend': '🤝', 'Sibling': '👫', 'Other': '🎁'
+    };
+
+    const interestEmoji = {
+      'Sports': '🏃', 'Reading': '📚', 'Tech': '💻', 'Fashion': '👗',
+      'Gaming': '🎮', 'Travel': '✈️', 'Cooking': '🍳', 'Music': '🎵'
     };
 
     let profiles = [];
@@ -541,6 +628,11 @@
     function renderCard(p) {
       const days = daysUntilBirthday(p.birthday);
       const dateStr = formatDate(p.birthday);
+      let interests = [];
+      try { interests = p.interests ? JSON.parse(p.interests) : []; } catch (e) {}
+      const tagsHtml = interests.length > 0
+        ? `<div class="interest-tags">${interests.map(i => `<span class="interest-tag">${interestEmoji[i] || ''} ${i}</span>`).join('')}</div>`
+        : '';
       return `
         <div class="profile-card">
           <div class="card-top">
@@ -558,6 +650,7 @@
             </div>
             ${daysBadge(days)}
           </div>
+          ${tagsHtml}
         </div>`;
     }
 
@@ -626,6 +719,7 @@
       document.getElementById('mRelation').value = '';
       document.getElementById('mBirthday').value = '';
       document.getElementById('mBudget').value = '';
+      document.querySelectorAll('.interest-chip input[type="checkbox"]').forEach(cb => cb.checked = false);
       hideModalError();
       document.getElementById('modalBackdrop').classList.add('open');
       document.getElementById('mName').focus();
@@ -661,6 +755,7 @@
       const relationship = document.getElementById('mRelation').value;
       const birthday     = document.getElementById('mBirthday').value;
       const giftBudget   = document.getElementById('mBudget').value;
+      const interests    = [...document.querySelectorAll('.interest-chip input:checked')].map(cb => cb.value);
       const btn          = document.getElementById('modalSubmit');
 
       hideModalError();
@@ -677,7 +772,7 @@
         const res = await fetch('http://localhost:3000/profiles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userEmail, name, relationship, birthday, giftBudget }),
+          body: JSON.stringify({ userEmail, name, relationship, birthday, giftBudget, interests }),
         });
 
         const data = await res.json();

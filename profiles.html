@@ -197,6 +197,68 @@
       color: var(--muted);
       font-size: 0.92rem;
     }
+
+    .interest-section { margin-top: 0.25rem; margin-bottom: 1rem; }
+    .interest-section > label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.6rem;
+    }
+    .interest-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .interest-chip { position: relative; }
+    .interest-chip input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .interest-chip label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: var(--cream);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .interest-chip input:checked + label {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--cream);
+    }
+    .interest-chip label:hover { border-color: var(--muted); }
+
+    .interest-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.4rem;
+    }
+    .interest-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 100px;
+      background: var(--cream);
+      border: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -247,6 +309,19 @@
           </select>
         </div>
       </div>
+      <div class="interest-section">
+        <label>Interests</label>
+        <div class="interest-chips">
+          <div class="interest-chip"><input type="checkbox" id="pi-sports" value="Sports"><label for="pi-sports">🏃 Sports</label></div>
+          <div class="interest-chip"><input type="checkbox" id="pi-reading" value="Reading"><label for="pi-reading">📚 Reading</label></div>
+          <div class="interest-chip"><input type="checkbox" id="pi-tech" value="Tech"><label for="pi-tech">💻 Tech</label></div>
+          <div class="interest-chip"><input type="checkbox" id="pi-fashion" value="Fashion"><label for="pi-fashion">👗 Fashion</label></div>
+          <div class="interest-chip"><input type="checkbox" id="pi-gaming" value="Gaming"><label for="pi-gaming">🎮 Gaming</label></div>
+          <div class="interest-chip"><input type="checkbox" id="pi-travel" value="Travel"><label for="pi-travel">✈️ Travel</label></div>
+          <div class="interest-chip"><input type="checkbox" id="pi-cooking" value="Cooking"><label for="pi-cooking">🍳 Cooking</label></div>
+          <div class="interest-chip"><input type="checkbox" id="pi-music" value="Music"><label for="pi-music">🎵 Music</label></div>
+        </div>
+      </div>
       <button class="btn-primary" onclick="addProfile()">+ Add person</button>
     </div>
 
@@ -261,6 +336,11 @@
       'Friend': '🤝', 'Sibling': '👫', 'Other': '🎁'
     };
 
+    const interestEmoji = {
+      'Sports': '🏃', 'Reading': '📚', 'Tech': '💻', 'Fashion': '👗',
+      'Gaming': '🎮', 'Travel': '✈️', 'Cooking': '🍳', 'Music': '🎵'
+    };
+
     const userEmail = sessionStorage.getItem('giftlyEmail');
 
     async function addProfile() {
@@ -268,6 +348,7 @@
       const relationship = document.getElementById('pRelation').value;
       const birthday = document.getElementById('pBirthday').value;
       const giftBudget = document.getElementById('pBudget').value;
+      const interests = [...document.querySelectorAll('.interest-chip input:checked')].map(cb => cb.value);
       const btn = document.querySelector('.btn-primary');
 
       if (!name || !relationship) {
@@ -287,7 +368,7 @@
         const res = await fetch('http://localhost:3000/profiles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userEmail, name, relationship, birthday, giftBudget }),
+          body: JSON.stringify({ userEmail, name, relationship, birthday, giftBudget, interests }),
         });
 
         const data = await res.json();
@@ -303,6 +384,7 @@
         document.getElementById('pRelation').value = '';
         document.getElementById('pBirthday').value = '';
         document.getElementById('pBudget').value = '';
+        document.querySelectorAll('.interest-chip input[type="checkbox"]').forEach(cb => cb.checked = false);
       } catch (err) {
         showFormError('Could not reach the server. Make sure it\'s running on port 3000.');
       } finally {
@@ -316,15 +398,26 @@
       const empty = document.getElementById('emptyState');
       if (empty) empty.remove();
 
+      let interests = [];
+      try { interests = p.interests ? JSON.parse(p.interests) : []; } catch (e) {}
+      const tagsHtml = interests.length > 0
+        ? `<div class="interest-tags">${interests.map(i => `<span class="interest-tag">${interestEmoji[i] || ''} ${i}</span>`).join('')}</div>`
+        : '';
+
       const card = document.createElement('div');
       card.className = 'profile-card';
       card.dataset.id = p.id;
+      card.style.flexDirection = 'column';
+      card.style.alignItems = 'flex-start';
       card.innerHTML = `
-        <div class="profile-avatar">${relationEmoji[p.relationship] || '🎁'}</div>
-        <div class="profile-info">
-          <div class="profile-name">${p.name} · ${p.relationship}</div>
-          <div class="profile-detail">🎂 ${formatDate(p.birthday)} · Budget: ${p.giftBudget || 'Not set'}</div>
+        <div style="display:flex;align-items:center;gap:1rem;width:100%">
+          <div class="profile-avatar">${relationEmoji[p.relationship] || '🎁'}</div>
+          <div class="profile-info">
+            <div class="profile-name">${p.name} · ${p.relationship}</div>
+            <div class="profile-detail">🎂 ${formatDate(p.birthday)} · Budget: ${p.giftBudget || 'Not set'}</div>
+          </div>
         </div>
+        ${tagsHtml}
       `;
       list.appendChild(card);
     }
