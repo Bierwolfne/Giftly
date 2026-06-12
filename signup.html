@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Giftly – Create Account</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="nav.js" defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -23,30 +24,6 @@
       color: var(--ink);
       min-height: 100vh;
     }
-
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.5rem 2.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .logo {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.6rem;
-      letter-spacing: -0.02em;
-      color: var(--ink);
-      text-decoration: none;
-    }
-
-    .nav-link {
-      font-size: 0.9rem;
-      color: var(--muted);
-      text-decoration: none;
-    }
-
-    .nav-link:hover { color: var(--ink); }
 
     .page {
       display: flex;
@@ -204,10 +181,7 @@
 </head>
 <body>
 
-  <nav>
-    <a href="index.html" class="logo">Giftly</a>
-    <a href="index.html" class="nav-link">← Back to home</a>
-  </nav>
+  <nav id="siteNav"></nav>
 
   <div class="page">
     <div class="card">

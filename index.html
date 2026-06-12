@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Giftly</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="nav.js" defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -23,52 +24,6 @@
       color: var(--ink);
       min-height: 100vh;
     }
-
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.5rem 2.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .logo {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.6rem;
-      letter-spacing: -0.02em;
-      color: var(--ink);
-    }
-
-    .nav-cta {
-      background: var(--ink);
-      color: var(--cream);
-      border: none;
-      padding: 0.55rem 1.3rem;
-      border-radius: 100px;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s;
-      text-decoration: none;
-    }
-
-    .nav-cta:hover { background: var(--blush-dark); }
-
-    .nav-secondary {
-      background: transparent;
-      color: var(--ink);
-      border: 1.5px solid var(--border);
-      padding: 0.55rem 1.3rem;
-      border-radius: 100px;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      transition: border-color 0.2s;
-    }
-    .nav-secondary:hover { border-color: var(--ink); }
 
     .hero {
       max-width: 720px;
@@ -197,97 +152,6 @@
       color: var(--muted);
     }
 
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    /* User menu */
-    .user-menu { position: relative; }
-
-    .user-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
-      background: #fff;
-      border: 1.5px solid var(--border);
-      border-radius: 100px;
-      padding: 0.42rem 1rem 0.42rem 0.5rem;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--ink);
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-      white-space: nowrap;
-    }
-    .user-btn:hover,
-    .user-btn.open { border-color: var(--ink); }
-
-    .user-avatar {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: var(--blush);
-      color: var(--ink);
-      font-size: 0.72rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .user-dropdown {
-      position: absolute;
-      top: calc(100% + 8px);
-      right: 0;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 8px 30px rgba(26,20,16,0.12);
-      min-width: 200px;
-      overflow: hidden;
-      display: none;
-      z-index: 50;
-      animation: dropIn 0.15s ease;
-    }
-    .user-dropdown.open { display: block; }
-
-    @keyframes dropIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .dropdown-item {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0.7rem 1rem;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--ink);
-      text-decoration: none;
-      background: transparent;
-      border: none;
-      width: 100%;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.1s;
-    }
-    .dropdown-item:hover { background: var(--cream); }
-
-    .dropdown-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 0.3rem 0;
-    }
-
-    .dropdown-logout { color: var(--muted); font-weight: 400; }
-    .dropdown-logout:hover { color: var(--ink); }
-
     footer {
       text-align: center;
       padding: 3rem 2rem;
@@ -299,13 +163,7 @@
 </head>
 <body>
 
-  <nav>
-    <span class="logo">Giftly</span>
-    <div class="nav-right" id="navRight">
-      <a href="gifts.html" class="nav-secondary">Browse gifts</a>
-      <a href="signup.html" class="nav-cta">Get started</a>
-    </div>
-  </nav>
+  <nav id="siteNav"></nav>
 
   <section class="hero">
     <span class="hero-eyebrow">Automatic gift giving</span>
@@ -342,57 +200,6 @@
     <p>© 2026 Giftly — Built with HTML & CSS</p>
   </footer>
 
-  <script>
-    function firstNameFromEmail(email) {
-      const local = email.split('@')[0];
-      const part  = local.split(/[._+\-]/)[0];
-      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
-    }
-
-    const storedEmail = sessionStorage.getItem('giftlyEmail');
-
-    if (storedEmail) {
-      const firstName = firstNameFromEmail(storedEmail);
-      const initial   = firstName[0].toUpperCase();
-      document.getElementById('navRight').innerHTML = `
-        <a href="gifts.html" class="nav-secondary">Browse gifts</a>
-        <div class="user-menu">
-          <button class="user-btn" id="userBtn" onclick="toggleUserMenu(event)"
-                  aria-expanded="false" aria-haspopup="true">
-            <span class="user-avatar">${initial}</span>
-            Hello, ${firstName} ▾
-          </button>
-          <div class="user-dropdown" id="userDropdown">
-            <a href="dashboard.html" class="dropdown-item">📊 Dashboard</a>
-            <a href="gifts.html"     class="dropdown-item">🎁 Browse gifts</a>
-            <a href="profiles.html"  class="dropdown-item">⚙️ Profile settings</a>
-            <div class="dropdown-divider"></div>
-            <button class="dropdown-item dropdown-logout" onclick="logout()">← Log out</button>
-          </div>
-        </div>`;
-    }
-
-    function toggleUserMenu(e) {
-      e.stopPropagation();
-      const btn = document.getElementById('userBtn');
-      const dd  = document.getElementById('userDropdown');
-      const opening = !dd.classList.contains('open');
-      dd.classList.toggle('open', opening);
-      btn.classList.toggle('open', opening);
-      btn.setAttribute('aria-expanded', opening);
-    }
-
-    function logout() {
-      sessionStorage.removeItem('giftlyEmail');
-      window.location.reload();
-    }
-
-    document.addEventListener('click', () => {
-      document.getElementById('userDropdown')?.classList.remove('open');
-      document.getElementById('userBtn')?.classList.remove('open');
-      document.getElementById('userBtn')?.setAttribute('aria-expanded', 'false');
-    });
-  </script>
 
 </body>
 </html>

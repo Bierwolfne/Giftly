@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Giftly – Browse Gifts</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="nav.js" defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -23,51 +24,6 @@
       color: var(--ink);
       min-height: 100vh;
     }
-
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.5rem 2.5rem;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      background: var(--cream);
-      z-index: 20;
-    }
-
-    .logo {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.6rem;
-      letter-spacing: -0.02em;
-      color: var(--ink);
-      text-decoration: none;
-    }
-
-    .nav-right { display: flex; align-items: center; gap: 1.25rem; }
-
-    .nav-link {
-      font-size: 0.9rem;
-      color: var(--muted);
-      text-decoration: none;
-      transition: color 0.15s;
-    }
-    .nav-link:hover { color: var(--ink); }
-
-    .nav-cta {
-      background: var(--ink);
-      color: var(--cream);
-      border: none;
-      padding: 0.55rem 1.3rem;
-      border-radius: 100px;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s;
-    }
-    .nav-cta:hover { background: var(--blush-dark); }
 
     /* Page header */
     .page-header {
@@ -431,13 +387,7 @@
 </head>
 <body>
 
-  <nav>
-    <a href="index.html" class="logo">Giftly</a>
-    <div class="nav-right">
-      <a href="dashboard.html" class="nav-link">Dashboard</a>
-      <a href="dashboard.html" class="nav-cta">My people</a>
-    </div>
-  </nav>
+  <nav id="siteNav"></nav>
 
   <div class="page-header">
     <p class="page-eyebrow">Gift catalog</p>
