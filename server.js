@@ -1,9 +1,66 @@
+require('dotenv').config();
+
 const express = require('express');
-const bcrypt = require('bcrypt');
+const bcrypt  = require('bcrypt');
 const sqlite3 = require('sqlite3').verbose();
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 3000;
+
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? require('stripe')(process.env.STRIPE_SECRET_KEY)
+  : null;
+
+// ── Webhook — raw body required; registered BEFORE express.json() ─────────────
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Stripe not configured.' });
+
+  const sig = req.headers['stripe-signature'];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook error: ${err.message}`);
+  }
+
+  const obj = event.data.object;
+
+  switch (event.type) {
+    case 'checkout.session.completed':
+      if (obj.mode === 'subscription') {
+        await dbRun(
+          'UPDATE users SET subscriptionStatus = ? WHERE stripeCustomerId = ?',
+          ['active', obj.customer]
+        ).catch(err => console.error('DB error in webhook:', err));
+      }
+      break;
+
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated':
+      await dbRun(
+        'UPDATE users SET subscriptionStatus = ? WHERE stripeCustomerId = ?',
+        [obj.status, obj.customer]
+      ).catch(err => console.error('DB error in webhook:', err));
+      break;
+
+    case 'customer.subscription.deleted':
+      await dbRun(
+        'UPDATE users SET subscriptionStatus = ? WHERE stripeCustomerId = ?',
+        ['canceled', obj.customer]
+      ).catch(err => console.error('DB error in webhook:', err));
+      break;
+
+    case 'invoice.payment_failed':
+      await dbRun(
+        'UPDATE users SET subscriptionStatus = ? WHERE stripeCustomerId = ?',
+        ['past_due', obj.customer]
+      ).catch(err => console.error('DB error in webhook:', err));
+      break;
+  }
+
+  res.json({ received: true });
+});
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -13,16 +70,20 @@ const db = new sqlite3.Database('./giftly.db');
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
-      id           INTEGER PRIMARY KEY AUTOINCREMENT,
-      email        TEXT    UNIQUE NOT NULL,
-      passwordHash TEXT    NOT NULL,
-      name         TEXT,
-      createdAt    TEXT    NOT NULL
+      id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+      email              TEXT    UNIQUE NOT NULL,
+      passwordHash       TEXT    NOT NULL,
+      name               TEXT,
+      stripeCustomerId   TEXT,
+      subscriptionStatus TEXT    DEFAULT 'free',
+      createdAt          TEXT    NOT NULL
     )
   `);
 
-  // Migration: add name column for existing databases
+  // Migrations for existing databases
   db.run(`ALTER TABLE users ADD COLUMN name TEXT`, () => {});
+  db.run(`ALTER TABLE users ADD COLUMN stripeCustomerId TEXT`, () => {});
+  db.run(`ALTER TABLE users ADD COLUMN subscriptionStatus TEXT DEFAULT 'free'`, () => {});
 
   db.run(`
     CREATE TABLE IF NOT EXISTS profiles (
@@ -37,7 +98,6 @@ db.serialize(() => {
     )
   `);
 
-  // Migration: add interests column if it doesn't exist yet
   db.run(`ALTER TABLE profiles ADD COLUMN interests TEXT`, () => {});
 
   db.run(`
@@ -58,6 +118,8 @@ db.serialize(() => {
   `);
 });
 
+// ── DB helpers ────────────────────────────────────────────────────────────────
+
 function dbGet(sql, params) {
   return new Promise((resolve, reject) => {
     db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row)));
@@ -77,6 +139,8 @@ function dbAll(sql, params) {
     db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)));
   });
 }
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
 
 app.post('/signup', async (req, res) => {
   const { email, password, name } = req.body;
@@ -134,6 +198,72 @@ app.post('/login', async (req, res) => {
   res.json({ email: user.email, name: user.name || null });
 });
 
+// ── User ──────────────────────────────────────────────────────────────────────
+
+app.get('/user', async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ error: 'email is required.' });
+
+  const user = await dbGet(
+    'SELECT email, name, subscriptionStatus FROM users WHERE email = ?',
+    [email.toLowerCase().trim()]
+  );
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  res.json({ email: user.email, name: user.name, subscriptionStatus: user.subscriptionStatus || 'free' });
+});
+
+// ── Stripe checkout ───────────────────────────────────────────────────────────
+
+app.post('/create-checkout-session', async (req, res) => {
+  if (!stripe) return res.status(503).json({ error: 'Stripe is not configured on this server.' });
+
+  const { userEmail } = req.body;
+  if (!userEmail) return res.status(400).json({ error: 'userEmail is required.' });
+
+  const user = await dbGet('SELECT * FROM users WHERE email = ?', [userEmail.toLowerCase().trim()]);
+  if (!user) return res.status(404).json({ error: 'User not found.' });
+
+  // Create or reuse Stripe customer
+  let customerId = user.stripeCustomerId;
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: user.email,
+      name:  user.name || undefined,
+    });
+    customerId = customer.id;
+    await dbRun('UPDATE users SET stripeCustomerId = ? WHERE email = ?', [customerId, user.email]);
+  }
+
+  const baseUrl = process.env.APP_URL || `http://localhost:${PORT}`;
+
+  // Use a pre-created price ID if set, otherwise build the price inline
+  const lineItem = process.env.STRIPE_PRICE_ID
+    ? { price: process.env.STRIPE_PRICE_ID, quantity: 1 }
+    : {
+        price_data: {
+          currency:     'usd',
+          product_data: { name: 'Giftly Pro', description: 'Monthly Giftly Pro subscription' },
+          unit_amount:  999,
+          recurring:    { interval: 'month' },
+        },
+        quantity: 1,
+      };
+
+  const session = await stripe.checkout.sessions.create({
+    customer:             customerId,
+    mode:                 'subscription',
+    payment_method_types: ['card'],
+    line_items:           [lineItem],
+    success_url:          `${baseUrl}/dashboard.html?upgrade=success`,
+    cancel_url:           `${baseUrl}/dashboard.html?upgrade=canceled`,
+  });
+
+  res.json({ url: session.url });
+});
+
+// ── Profiles ──────────────────────────────────────────────────────────────────
+
 app.post('/profiles', async (req, res) => {
   const { userEmail, name, relationship, birthday, giftBudget, interests } = req.body;
 
@@ -172,6 +302,8 @@ app.get('/profiles', async (req, res) => {
 
   res.json(rows);
 });
+
+// ── Gifts ─────────────────────────────────────────────────────────────────────
 
 app.post('/gifts', async (req, res) => {
   const { userEmail, profileId, profileName, giftId, giftName, giftPrice, giftSource, giftUrl } = req.body;

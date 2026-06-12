@@ -452,6 +452,99 @@
       white-space: nowrap;
     }
 
+    /* Upgrade banner */
+    .upgrade-wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 2rem 1.5rem;
+    }
+
+    .upgrade-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: #FFF7ED;
+      border: 1px solid var(--blush);
+      border-radius: 14px;
+      padding: 1rem 1.4rem;
+      flex-wrap: wrap;
+    }
+
+    .upgrade-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .upgrade-icon { font-size: 1.25rem; flex-shrink: 0; }
+
+    .upgrade-text strong {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.1rem;
+    }
+
+    .upgrade-text span {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .upgrade-btn {
+      background: var(--ink);
+      color: var(--cream);
+      border: none;
+      padding: 0.6rem 1.3rem;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .upgrade-btn:hover { background: var(--blush-dark); transform: translateY(-1px); }
+    .upgrade-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .pro-status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 100px;
+      background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--ink);
+      color: var(--cream);
+      border-radius: 100px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      z-index: 200;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+      opacity: 0;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.success { background: #276749; }
+
     @media (max-width: 600px) {
       nav { padding: 1.2rem 1.25rem; }
       .page-header { padding: 2rem 1.25rem 1rem; }
@@ -544,6 +637,7 @@
 
     let profiles = [];
     let userEmail = null;
+    let subscriptionStatus = 'free';
 
     // ── Helpers ──────────────────────────────────────────────
 
@@ -740,6 +834,69 @@
       }
     }
 
+    // ── Stripe ────────────────────────────────────────────────
+
+    function renderUpgradeBanner() {
+      const wrap = document.getElementById('upgradeBannerWrap');
+      if (!wrap) return;
+      const isPro = subscriptionStatus === 'active' || subscriptionStatus === 'past_due';
+      if (isPro) {
+        wrap.innerHTML = `
+          <div class="upgrade-wrap">
+            <div class="pro-status-chip">✨ Giftly Pro</div>
+          </div>`;
+      } else {
+        wrap.innerHTML = `
+          <div class="upgrade-wrap">
+            <div class="upgrade-card">
+              <div class="upgrade-left">
+                <span class="upgrade-icon">✨</span>
+                <div class="upgrade-text">
+                  <strong>Upgrade to Giftly Pro</strong>
+                  <span>Automated reminders, unlimited profiles &amp; more — $9.99/month</span>
+                </div>
+              </div>
+              <button class="upgrade-btn" id="upgradeBtn" onclick="startCheckout()">Upgrade now →</button>
+            </div>
+          </div>`;
+      }
+    }
+
+    async function startCheckout() {
+      const btn = document.getElementById('upgradeBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Redirecting…'; }
+      try {
+        const res = await fetch('http://localhost:3000/create-checkout-session', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ userEmail }),
+        });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          window.location.href = data.url;
+        } else {
+          showToast(data.error || 'Could not start checkout. Please try again.');
+          if (btn) { btn.disabled = false; btn.textContent = 'Upgrade now →'; }
+        }
+      } catch (err) {
+        showToast('Could not reach the server. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Upgrade now →'; }
+      }
+    }
+
+    function showToast(msg, type) {
+      let el = document.getElementById('giftlyToast');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'giftlyToast';
+        document.body.appendChild(el);
+      }
+      el.textContent = msg;
+      el.className = 'toast' + (type === 'success' ? ' success' : '');
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+      setTimeout(() => el.classList.remove('show'), 4500);
+    }
+
     // ── Init ──────────────────────────────────────────────────
 
     async function init() {
@@ -770,15 +927,34 @@
           <button class="add-btn" onclick="openModal()">+ Add person</button>
         </div>
         <div class="stats-row" id="statsRow"></div>
+        <div id="upgradeBannerWrap"></div>
         <div class="profile-grid-wrap" id="gridWrap">
           ${renderSkeleton(3)}
         </div>`;
 
+      const upgradeResult = new URLSearchParams(window.location.search).get('upgrade');
+      if (upgradeResult) history.replaceState(null, '', window.location.pathname);
+
       try {
-        const res = await fetch(`http://localhost:3000/profiles?email=${encodeURIComponent(userEmail)}`);
-        profiles = await res.json();
+        const [profilesRes, userRes] = await Promise.all([
+          fetch(`http://localhost:3000/profiles?email=${encodeURIComponent(userEmail)}`),
+          fetch(`http://localhost:3000/user?email=${encodeURIComponent(userEmail)}`),
+        ]);
+
+        profiles = await profilesRes.json();
+        try {
+          const userData = await userRes.json();
+          subscriptionStatus = userData.subscriptionStatus || 'free';
+        } catch (e) {}
+
+        if (upgradeResult === 'success') subscriptionStatus = 'active';
+
+        renderUpgradeBanner();
         renderStats();
         renderGrid();
+
+        if (upgradeResult === 'success') showToast('🎉 Welcome to Giftly Pro!', 'success');
+        else if (upgradeResult === 'canceled') showToast('Upgrade canceled. You can upgrade anytime.');
       } catch (err) {
         document.getElementById('gridWrap').innerHTML = `
           <div class="empty">
