@@ -756,7 +756,10 @@
         return;
       }
 
-      const firstName = userEmail.split('@')[0];
+      const storedName  = sessionStorage.getItem('giftlyName');
+      const firstName   = storedName && storedName.trim()
+        ? storedName.trim().split(' ')[0]
+        : (s => s.charAt(0).toUpperCase() + s.slice(1))(userEmail.split('@')[0]);
 
       app.innerHTML = `
         <div class="page-header">

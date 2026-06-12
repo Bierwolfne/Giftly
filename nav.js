@@ -13,15 +13,6 @@
 
       '#siteNav .nav-right{display:flex;align-items:center;gap:0.75rem;}',
 
-      '#siteNav .nav-link{font-size:0.9rem;color:var(--muted);text-decoration:none;transition:color 0.15s;}',
-      '#siteNav .nav-link:hover{color:var(--ink);}',
-
-      '#siteNav .nav-secondary{background:transparent;color:var(--ink);',
-      'border:1.5px solid var(--border);padding:0.5rem 1.2rem;border-radius:100px;',
-      'font-family:Inter,sans-serif;font-size:0.9rem;font-weight:500;',
-      'text-decoration:none;transition:border-color 0.2s;}',
-      '#siteNav .nav-secondary:hover{border-color:var(--ink);}',
-
       '#siteNav .nav-cta{background:var(--ink);color:var(--cream);border:none;',
       'padding:0.55rem 1.3rem;border-radius:100px;font-family:Inter,sans-serif;',
       'font-size:0.9rem;font-weight:500;cursor:pointer;text-decoration:none;transition:background 0.2s;}',
@@ -63,8 +54,13 @@
   }
 
   // ── Helpers ───────────────────────────────────────────────
-  function firstNameFromEmail(email) {
-    const part = email.split('@')[0].split(/[._+\-]/)[0];
+  function resolveFirstName(email) {
+    var stored = sessionStorage.getItem('giftlyName');
+    if (stored && stored.trim()) {
+      var part = stored.trim().split(' ')[0];
+      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+    }
+    var part = email.split('@')[0].split(/[._+\-]/)[0];
     return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
   }
 
@@ -74,17 +70,16 @@
 
   // ── Build nav ─────────────────────────────────────────────
   function buildNav() {
-    const nav = document.getElementById('siteNav');
+    var nav = document.getElementById('siteNav');
     if (!nav) return;
 
-    const email = sessionStorage.getItem('giftlyEmail');
+    var email = sessionStorage.getItem('giftlyEmail');
 
     if (email) {
-      const firstName = firstNameFromEmail(email);
+      var firstName = resolveFirstName(email);
       nav.innerHTML =
         '<a href="index.html" class="logo">Giftly</a>' +
         '<div class="nav-right">' +
-          '<a href="gifts.html" class="nav-link">Browse gifts</a>' +
           '<div class="user-menu">' +
             '<button class="user-btn" id="navUserBtn" aria-expanded="false" aria-haspopup="true">' +
               '<span class="user-avatar">' + esc(firstName[0]) + '</span>' +
@@ -111,13 +106,13 @@
 
       document.getElementById('navLogoutBtn').addEventListener('click', function () {
         sessionStorage.removeItem('giftlyEmail');
+        sessionStorage.removeItem('giftlyName');
         window.location.href = 'index.html';
       });
     } else {
       nav.innerHTML =
         '<a href="index.html" class="logo">Giftly</a>' +
         '<div class="nav-right">' +
-          '<a href="gifts.html" class="nav-secondary">Browse gifts</a>' +
           '<a href="signup.html" class="nav-cta">Get started</a>' +
         '</div>';
     }

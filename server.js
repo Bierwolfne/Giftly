@@ -16,9 +16,13 @@ db.serialize(() => {
       id           INTEGER PRIMARY KEY AUTOINCREMENT,
       email        TEXT    UNIQUE NOT NULL,
       passwordHash TEXT    NOT NULL,
+      name         TEXT,
       createdAt    TEXT    NOT NULL
     )
   `);
+
+  // Migration: add name column for existing databases
+  db.run(`ALTER TABLE users ADD COLUMN name TEXT`, () => {});
 
   db.run(`
     CREATE TABLE IF NOT EXISTS profiles (
@@ -75,11 +79,11 @@ function dbAll(sql, params) {
 }
 
 app.post('/signup', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, name } = req.body;
   console.log('Signup attempt:', email);
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required.' });
+  if (!email || !password || !name) {
+    return res.status(400).json({ error: 'Name, email and password are required.' });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -92,6 +96,7 @@ app.post('/signup', async (req, res) => {
   }
 
   const normalizedEmail = email.toLowerCase().trim();
+  const trimmedName     = name.trim();
 
   const existing = await dbGet('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
   if (existing) {
@@ -100,11 +105,11 @@ app.post('/signup', async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 12);
   await dbRun(
-    'INSERT INTO users (email, passwordHash, createdAt) VALUES (?, ?, ?)',
-    [normalizedEmail, passwordHash, new Date().toISOString()]
+    'INSERT INTO users (email, passwordHash, name, createdAt) VALUES (?, ?, ?, ?)',
+    [normalizedEmail, passwordHash, trimmedName, new Date().toISOString()]
   );
 
-  res.status(201).json({ message: 'Account created successfully.', email: normalizedEmail });
+  res.status(201).json({ message: 'Account created successfully.', email: normalizedEmail, name: trimmedName });
 });
 
 app.post('/login', async (req, res) => {
@@ -115,7 +120,7 @@ app.post('/login', async (req, res) => {
   }
 
   const normalizedEmail = email.toLowerCase().trim();
-  const user = await dbGet('SELECT email, passwordHash FROM users WHERE email = ?', [normalizedEmail]);
+  const user = await dbGet('SELECT email, passwordHash, name FROM users WHERE email = ?', [normalizedEmail]);
 
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password.' });
@@ -126,7 +131,7 @@ app.post('/login', async (req, res) => {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
 
-  res.json({ email: user.email });
+  res.json({ email: user.email, name: user.name || null });
 });
 
 app.post('/profiles', async (req, res) => {

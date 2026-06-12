@@ -224,6 +224,7 @@
 
         if (res.ok) {
           sessionStorage.setItem('giftlyEmail', data.email);
+          if (data.name) sessionStorage.setItem('giftlyName', data.name);
           successMsg.style.display = 'block';
           setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
         } else {

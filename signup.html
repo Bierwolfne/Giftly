@@ -220,44 +220,46 @@
 
   <script>
     async function handleSignup() {
-      const email = document.getElementById('email').value.trim();
+      const name     = document.getElementById('name').value.trim();
+      const email    = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const btn = document.getElementById('submitBtn');
+      const btn        = document.getElementById('submitBtn');
       const successMsg = document.getElementById('successMsg');
-      const errorMsg = document.getElementById('errorMsg');
+      const errorMsg   = document.getElementById('errorMsg');
 
-      errorMsg.style.display = 'none';
+      errorMsg.style.display  = 'none';
       successMsg.style.display = 'none';
 
-      if (!email || !password) {
-        showError('Please enter your email and password.');
+      if (!name || !email || !password) {
+        showError('Please enter your name, email and password.');
         return;
       }
 
-      btn.disabled = true;
+      btn.disabled    = true;
       btn.textContent = 'Creating account…';
 
       try {
         const res = await fetch('http://localhost:3000/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ name, email, password }),
         });
 
         const data = await res.json();
 
         if (res.ok) {
           sessionStorage.setItem('giftlyEmail', data.email);
+          sessionStorage.setItem('giftlyName',  data.name);
           successMsg.style.display = 'block';
           setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         } else {
           showError(data.error || 'Something went wrong. Please try again.');
-          btn.disabled = false;
+          btn.disabled    = false;
           btn.textContent = 'Create account';
         }
       } catch (err) {
         showError('Could not reach the server. Make sure it\'s running on port 3000.');
-        btn.disabled = false;
+        btn.disabled    = false;
         btn.textContent = 'Create account';
       }
     }
