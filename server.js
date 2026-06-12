@@ -63,9 +63,63 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 });
 
 app.use(express.json());
-app.use(express.static(__dirname));
+
 
 const db = new sqlite3.Database('./giftly.db');
+
+// [id, name, description, price, category, interests, icon, bg, source, url]
+const CATALOG_SEEDS = [
+  [1,  'Anker 622 Magnetic Battery (MagSafe)',    '5,000mAh MagSafe battery snaps to iPhone 12+. No cable needed, folds flat.',                      36,  'tech',    '["Tech","Gaming"]',           '🔋', '#EFF6FF', 'Amazon',     'https://www.amazon.com/dp/B09NWBBQMZ'],
+  [2,  'Kindle Paperwhite 16 GB (2023)',           '7" 300ppi glare-free display, warm light, weeks of battery life, IPX8 waterproof.',               160, 'tech',    '["Tech","Reading"]',          '📖', '#EFF6FF', 'Amazon',     'https://www.amazon.com/dp/B0CFPJYX1H'],
+  [3,  'Apple AirTag 4-Pack',                      'Precision Finding with Ultra Wideband, works with iPhone Find My. IPX6 rated.',                    89,  'tech',    '["Tech","Travel"]',           '📍', '#EFF6FF', 'Amazon',     'https://www.amazon.com/dp/B0932QJ2JZ'],
+  [4,  'Sony WF-C700N True Wireless Earbuds',      'Active noise cancellation, 15-hr battery (35hr with case), multipoint pairing, IPX4.',             100, 'tech',    '["Tech","Music","Gaming"]',   '🎧', '#EFF6FF', 'Amazon',     'https://www.amazon.com/dp/B0BWTL6HMH'],
+  [5,  'Govee LED Desk Lamp + Wireless Charger',   'Touch dimming, 4 color temps, 10W Qi charging pad built into base, USB-A port.',                   46,  'tech',    '["Tech","Gaming"]',           '💡', '#EFF6FF', 'Amazon',     'https://www.amazon.com/s?k=govee+desk+lamp+wireless+charger'],
+  [6,  'Fujifilm Instax Mini Link 2 Printer',      'Prints credit-card photos from your phone via Bluetooth. Includes 10-shot film pack.',              90,  'tech',    '["Tech","Travel"]',           '📷', '#EFF6FF', 'Amazon',     'https://www.amazon.com/dp/B09P4KG5ZC'],
+  [7,  'Logitech MX Master 3S Wireless Mouse',     'Near-silent clicks, MagSpeed scroll, 8K DPI, works on any surface including glass.',               100, 'tech',    '["Tech","Gaming"]',           '🖱️', '#EFF6FF', 'Amazon',     'https://www.amazon.com/dp/B09HM94VDS'],
+  [8,  'Personalized Leather-Bound Journal',       'Hand-stitched full-grain leather, name in gold foil, 200 acid-free lined pages, A5.',              45,  'reading', '["Reading"]',                 '📓', '#F0FDF4', 'Etsy',       'https://www.etsy.com/search?q=personalized+leather+journal'],
+  [9,  'Marble Arch Bookend Pair',                 'Solid white Carrara marble, 6" arch, heavy enough for a full shelf. Sold as a pair.',               54,  'reading', '["Reading"]',                 '🗿', '#F0FDF4', 'Etsy',       'https://www.etsy.com/search?q=marble+arch+bookends'],
+  [10, 'Botanical Magnetic Bookmark Set (6)',       'Hand-painted wildflower prints on 300gsm card, laminated with strong magnets.',                     16,  'reading', '["Reading"]',                 '🔖', '#F0FDF4', 'Etsy',       'https://www.etsy.com/search?q=botanical+magnetic+bookmark+set'],
+  [11, 'Glocusent LED Neck Reading Light',          'Rechargeable hands-free book light. 3 color temps × 5 brightness levels. 60-hr battery.',          20,  'reading', '["Reading"]',                 '🔦', '#F0FDF4', 'Amazon',     'https://www.amazon.com/dp/B09HNM3B97'],
+  [12, 'Leuchtturm1917 Hardcover Notebook A5',      'Lay-flat smyth-sewn binding, 120g/m² blank pages, elastic closure, ribbon marker.',                22,  'reading', '["Reading"]',                 '🎨', '#F0FDF4', 'Amazon',     'https://www.amazon.com/dp/B07MBHJ7JH'],
+  [13, 'Audible Premium Plus 3-Month Gift',         'Unlimited Audible Plus catalog + 3 premium title credits. Delivered by email instantly.',           45,  'reading', '["Reading","Tech"]',          '🎙️', '#F0FDF4', 'Amazon',     'https://www.amazon.com/s?k=audible+gift+membership+3+month'],
+  [14, 'Slip Pure Silk Pillowcase – Queen',         '22-momme Slipsilk prevents hair breakage and morning creases. Machine washable.',                   89,  'fashion', '["Fashion"]',                 '🌙', '#FDF4F4', 'Amazon',     'https://www.amazon.com/s?k=slip+pure+silk+pillowcase+queen'],
+  [15, 'Artisan Soap & Body Cream Gift Box',        'Six goat-milk soaps and two shea-butter creams in seasonal scents. Ribbon-wrapped.',                58,  'fashion', '["Fashion"]',                 '🧴', '#FDF4F4', 'Etsy',       'https://www.etsy.com/search?q=artisan+soap+lotion+gift+box'],
+  [16, 'Jade Roller & Gua Sha Set',                 'Authentic nephrite jade cools and de-puffs skin. Comes with velvet pouch and how-to card.',         26,  'fashion', '["Fashion"]',                 '💚', '#FDF4F4', 'Amazon',     'https://www.amazon.com/s?k=jade+roller+gua+sha+set+nephrite'],
+  [17, 'Alaska Bear Weighted Silk Eye Mask',        '22-momme mulberry silk, gentle microbead weight, adjustable strap. Blocks all light.',              24,  'fashion', '["Fashion"]',                 '😴', '#FDF4F4', 'Amazon',     'https://www.amazon.com/s?k=alaska+bear+weighted+silk+sleep+mask'],
+  [18, 'Rosemary & Castor Hair Growth Set',         'Scalp massager + cold-pressed castor oil + rosemary serum. Handmade, vegan.',                       32,  'fashion', '["Fashion"]',                 '💆', '#FDF4F4', 'Etsy',       'https://www.etsy.com/search?q=rosemary+castor+oil+hair+growth+gift'],
+  [19, 'Rifle Paper Co. Floral Canvas Pouch',       'Block-printed cotton canvas, zip top, two inside pockets. 9×5", great for travel.',                38,  'fashion', '["Fashion","Travel"]',        '👜', '#FDF4F4', 'Amazon',     'https://www.amazon.com/s?k=rifle+paper+co+floral+canvas+pouch'],
+  [20, 'Razer Kraken X USB Gaming Headset',         '7.1 surround sound, lightweight frame, bendable cardioid mic, cross-platform compatible.',          50,  'gaming',  '["Gaming","Tech"]',           '🎧', '#F5F0FF', 'Amazon',     'https://www.amazon.com/dp/B07FDBH9RM'],
+  [21, 'SteelSeries QcK Heavy XXL Mouse Pad',       'Extra-thick base, micro-textured cloth, anti-fray stitched edges, 36"×12".',                       30,  'gaming',  '["Gaming","Tech"]',           '🖱️', '#F5F0FF', 'Amazon',     'https://www.amazon.com/dp/B000UVRU6A'],
+  [22, 'Xbox Game Pass Ultimate 3-Month',           '100+ games, Xbox Live Gold, and EA Play included. Delivered by email.',                             45,  'gaming',  '["Gaming","Tech"]',           '🎮', '#F5F0FF', 'Amazon',     'https://www.amazon.com/s?k=xbox+game+pass+ultimate+3+month+gift'],
+  [23, 'Nintendo Switch Sports',                    'Six sports: Tennis, Soccer, Bowling, Volleyball, Badminton, and Chambara. 1–4 players.',            50,  'gaming',  '["Gaming","Sports"]',         '🏸', '#F5F0FF', 'Amazon',     'https://www.amazon.com/dp/B09TFQ42W6'],
+  [24, 'Elgato Stream Deck Mini',                   '6 customizable LCD keys for streaming, editing, or app shortcuts. Plug-and-play USB.',              90,  'gaming',  '["Gaming","Tech"]',           '🎛️', '#F5F0FF', 'Amazon',     'https://www.amazon.com/dp/B07DYRS1WH'],
+  [25, 'Custom Engraved Controller Stand',          'Hand-cut wood stand for Xbox, PS5, or Nintendo controllers. Gamertag laser-engraved.',              32,  'gaming',  '["Gaming"]',                  '🕹️', '#F5F0FF', 'Etsy',       'https://www.etsy.com/search?q=custom+gaming+controller+stand+engraved'],
+  [26, 'National Parks Scratch-Off Poster',         '24×17" scratch-off all 63 US National Parks as you visit. Foil artwork underneath.',                25,  'travel',  '["Travel","Sports"]',         '🗺️', '#FFFBEB', 'Amazon',     'https://www.amazon.com/dp/B078H5LZSH'],
+  [27, 'Nikon Aculon A211 Binoculars 10×42',        'Eco-glass multi-coated optics, rubber-armored body. Great for hiking and birding.',                 75,  'travel',  '["Travel","Sports"]',         '🔭', '#FFFBEB', 'Amazon',     'https://www.amazon.com/dp/B004JVKXAS'],
+  [28, 'Sea to Summit Nano Tarp Poncho',             'Silnylon, packs to 100g, doubles as emergency tarp. 10 snap closures, stuff sack included.',       60,  'travel',  '["Travel","Sports"]',         '🌧️', '#FFFBEB', 'Amazon',     'https://www.amazon.com/s?k=sea+to+summit+poncho+tarp'],
+  [29, 'ENO DoubleNest Hammock',                    'Holds 400 lbs, sets up in 2 minutes, weighs 19oz. Includes stuff sack and slings.',                 70,  'travel',  '["Travel","Sports"]',         '🌴', '#FFFBEB', 'Amazon',     'https://www.amazon.com/dp/B001L9T3PO'],
+  [30, 'Cotopaxi Batac 24L Backpack',               'Recycled materials, padded laptop sleeve, dual water bottle pockets. Carry-on compliant.',          90,  'travel',  '["Travel","Sports"]',         '🎒', '#FFFBEB', 'Amazon',     'https://www.amazon.com/s?k=cotopaxi+batac+24l+backpack'],
+  [31, 'Airbnb Experience Gift Card ($100)',         'Good for any Airbnb Experience worldwide: cooking, tours, art workshops, and more.',               100, 'travel',  '["Travel","Cooking","Music"]', '🌍', '#FFFBEB', 'Airbnb',     'https://www.airbnb.com/gift-cards'],
+  [32, 'Stargazing Night Gift Kit',                 'Personalized star map of a meaningful date + insulated thermos + constellation guide.',             62,  'travel',  '["Travel"]',                  '🌠', '#FFFBEB', 'Etsy',       'https://www.etsy.com/search?q=stargazing+night+gift+kit'],
+  [33, 'Yellowbird Hot Sauce Variety 6-Pack',       '6 small-batch sauces: Habanero, Ghost Pepper, Jalapeño, Serrano, Sriracha, and Classic.',           45,  'cooking', '["Cooking"]',                 '🌶️', '#FFF7ED', 'Amazon',     'https://www.amazon.com/s?k=yellowbird+hot+sauce+variety+pack'],
+  [34, '3-Month Single-Origin Coffee Sub',          'Freshly roasted beans bi-weekly from rotating farms worldwide. Whole bean or ground.',              72,  'cooking', '["Cooking"]',                 '☕', '#FFF7ED', 'Etsy',       'https://www.etsy.com/search?q=single+origin+coffee+subscription+gift'],
+  [35, 'Vahdam India Starter Tea Kit (8 teas)',     '8 full-leaf teas from Indian estates — Assam, Darjeeling, Chai, herbal. Bamboo infuser.',           36,  'cooking', '["Cooking"]',                 '🍵', '#FFF7ED', 'Amazon',     'https://www.amazon.com/dp/B01NAFDTWK'],
+  [36, 'Brightland ALIVE + AWAKE Olive Oil Duo',   'Two 375ml bottles: bright cold-pressed EVOO and herb-infused. California single-harvest.',           55,  'cooking', '["Cooking"]',                 '🫒', '#FFF7ED', 'Amazon',     'https://www.amazon.com/s?k=brightland+olive+oil+duo'],
+  [37, 'Compartés Artisan Chocolate Set (10)',      '10 single-origin bars in bold flavors: Rose & Champagne, Horchata, Avocado Toast, and more.',       48,  'cooking', '["Cooking"]',                 '🍫', '#FFF7ED', 'Amazon',     'https://www.amazon.com/s?k=compartes+chocolate+bar+gift+set'],
+  [38, 'Totally Bamboo 3-Piece Cutting Boards',    'Graduated S/M/L boards with juice groove. NSF certified, moisture-resistant bamboo.',               35,  'cooking', '["Cooking"]',                 '🪵', '#FFF7ED', 'Amazon',     'https://www.amazon.com/dp/B001Y0PUE0'],
+  [39, 'MasterClass All-Access Annual Pass',        'Unlimited classes with 180+ instructors: Gordon Ramsay, Ina Garten, Thomas Keller, and more.',      120, 'cooking', '["Cooking","Sports","Music"]', '👨‍🍳', '#FFF7ED', 'MasterClass','https://www.masterclass.com/gift'],
+  [40, 'JBL Clip 4 Waterproof Speaker',            'IP67 waterproof, 10hr battery, carabiner clip. Bold JBL sound, built for outdoors.',                80,  'music',   '["Music","Sports","Travel"]',  '🔊', '#FFF0F5', 'Amazon',     'https://www.amazon.com/dp/B09FKG7SBF'],
+  [41, 'Fender Play 3-Month Gift Membership',       'Structured video lessons for guitar, bass, and ukulele. Beginner to advanced paths.',               30,  'music',   '["Music"]',                   '🎸', '#FFF0F5', 'Amazon',     'https://www.amazon.com/s?k=fender+play+gift+card'],
+  [42, 'Vinyl Record Storage Crate (Walnut)',       'Solid walnut, holds 60 LPs, fits standard 12" sleeves. Hand-finished natural grain.',               45,  'music',   '["Music"]',                   '🎶', '#FFF0F5', 'Etsy',       'https://www.etsy.com/search?q=vinyl+record+storage+crate+walnut+wood'],
+  [43, 'Crosley Cruiser Plus Record Player',        'Built-in Bluetooth speaker, 3-speed, pitch control, RCA output. Vintage suitcase style.',           80,  'music',   '["Music","Tech"]',            '🎵', '#FFF0F5', 'Amazon',     'https://www.amazon.com/dp/B098N8FQMF'],
+  [44, 'Blue Snowball iCE USB Microphone',          'Plug-and-play USB condenser mic for podcasting and streaming. Cardioid pickup pattern.',            50,  'music',   '["Music","Tech"]',            '🎙️', '#FFF0F5', 'Amazon',     'https://www.amazon.com/dp/B014RIRQOA'],
+  [45, 'Music Watercolor Portrait Commission',      'Artist paints a custom watercolor of your person playing their instrument. 8×10" archival print.',  55,  'music',   '["Music"]',                   '🎼', '#FFF0F5', 'Etsy',       'https://www.etsy.com/search?q=personalized+music+watercolor+portrait'],
+  [46, 'TheraBand Pro Resistance Band Set',         'All 5 resistance levels, latex-free option. Physical-therapist grade, 5ft per band.',               25,  'sports',  '["Sports"]',                  '💪', '#F0FCFF', 'Amazon',     'https://www.amazon.com/s?k=theraband+professional+resistance+band+set'],
+  [47, 'Manduka PRO Yoga Mat 6mm',                  '6mm dense cushion, closed-cell surface, lifetime guarantee. Non-slip even when wet.',               120, 'sports',  '["Sports"]',                  '🧘', '#F0FCFF', 'Amazon',     'https://www.amazon.com/s?k=manduka+pro+yoga+mat'],
+  [48, 'Fitbit Inspire 3 Fitness Tracker',          'Daily Readiness Score, stress management, SpO2 sensor, 10-day battery. Slim design.',               100, 'sports',  '["Sports","Tech"]',           '⌚', '#F0FCFF', 'Amazon',     'https://www.amazon.com/dp/B0B5G7H9TG'],
+  [49, "Dr Teal's Foaming Bath Soak Gift Set",      '5 Epsom salt soaks: Lavender, Eucalyptus, Pink Himalayan, Charcoal, Pure. 34oz each.',              30,  'sports',  '["Sports"]',                  '🛁', '#F0FCFF', 'Amazon',     'https://www.amazon.com/s?k=dr+teals+foaming+bath+soak+gift+set'],
+  [50, 'SKLZ Agility Cone Set with Carry Bag',      '20 disc cones + 4 standard cones + carry bag. For speed training, drills, and kids.',               22,  'sports',  '["Sports"]',                  '🏃', '#F0FCFF', 'Amazon',     'https://www.amazon.com/s?k=sklz+agility+cone+set'],
+];
 
 db.serialize(() => {
   db.run(`
@@ -116,6 +170,27 @@ db.serialize(() => {
       FOREIGN KEY (profileId)  REFERENCES profiles(id)
     )
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS gift_catalog (
+      id          INTEGER PRIMARY KEY,
+      name        TEXT    NOT NULL,
+      description TEXT,
+      price       REAL    NOT NULL,
+      category    TEXT    NOT NULL,
+      interests   TEXT,
+      icon        TEXT,
+      bg          TEXT,
+      source      TEXT,
+      url         TEXT
+    )
+  `);
+
+  const stmt = db.prepare(
+    'INSERT OR IGNORE INTO gift_catalog (id,name,description,price,category,interests,icon,bg,source,url) VALUES (?,?,?,?,?,?,?,?,?,?)'
+  );
+  CATALOG_SEEDS.forEach(row => stmt.run(row));
+  stmt.finalize();
 });
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
@@ -341,6 +416,30 @@ app.get('/gifts', async (req, res) => {
   res.json(rows);
 });
 
+// ── Gift catalog ──────────────────────────────────────────────────────────────
+
+app.get('/api/gifts', async (req, res) => {
+  const { category } = req.query;
+  const sql = (category && category !== 'all')
+    ? 'SELECT * FROM gift_catalog WHERE category = ? ORDER BY id'
+    : 'SELECT * FROM gift_catalog ORDER BY id';
+  const params = (category && category !== 'all') ? [category] : [];
+
+  const rows = await dbAll(sql, params);
+  res.json(rows.map(r => ({
+    id:        r.id,
+    cat:       r.category,
+    name:      r.name,
+    desc:      r.description,
+    price:     r.price,
+    source:    r.source,
+    icon:      r.icon,
+    bg:        r.bg,
+    interests: JSON.parse(r.interests || '[]'),
+    url:       r.url,
+  })));
+});
+app.use(express.static(__dirname));
 app.listen(PORT, () => {
   console.log(`Giftly server running at http://localhost:${PORT}`);
 });
