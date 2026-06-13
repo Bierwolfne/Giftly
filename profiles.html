@@ -341,7 +341,7 @@
       btn.textContent = 'Saving…';
 
       try {
-        const res = await fetch('http://localhost:3000/profiles', {
+        const res = await fetch('/profiles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userEmail, name, relationship, birthday, giftBudget, interests }),
@@ -423,7 +423,7 @@
     async function loadProfiles() {
       if (!userEmail) return;
       try {
-        const res = await fetch(`http://localhost:3000/profiles?email=${encodeURIComponent(userEmail)}`);
+        const res = await fetch(`/profiles?email=${encodeURIComponent(userEmail)}`);
         const data = await res.json();
         data.forEach(renderProfile);
       } catch (err) {

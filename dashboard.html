@@ -809,7 +809,7 @@
       btn.textContent = 'Saving…';
 
       try {
-        const res = await fetch('http://localhost:3000/profiles', {
+        const res = await fetch('/profiles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userEmail, name, relationship, birthday, giftBudget, interests }),
@@ -866,7 +866,7 @@
       const btn = document.getElementById('upgradeBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Redirecting…'; }
       try {
-        const res = await fetch('http://localhost:3000/create-checkout-session', {
+        const res = await fetch('/create-checkout-session', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ userEmail }),
@@ -937,8 +937,8 @@
 
       try {
         const [profilesRes, userRes] = await Promise.all([
-          fetch(`http://localhost:3000/profiles?email=${encodeURIComponent(userEmail)}`),
-          fetch(`http://localhost:3000/user?email=${encodeURIComponent(userEmail)}`),
+          fetch(`/profiles?email=${encodeURIComponent(userEmail)}`),
+          fetch(`/user?email=${encodeURIComponent(userEmail)}`),
         ]);
 
         profiles = await profilesRes.json();

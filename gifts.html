@@ -464,7 +464,7 @@
 
     async function loadGifts() {
       try {
-        const res = await fetch('http://localhost:3000/api/gifts');
+        const res = await fetch('/api/gifts');
         GIFTS = await res.json();
       } catch (_) { /* server offline */ }
     }
@@ -472,7 +472,7 @@
     async function loadProfiles() {
       if (!userEmail) return;
       try {
-        const res = await fetch(`http://localhost:3000/profiles?email=${encodeURIComponent(userEmail)}`);
+        const res = await fetch(`/profiles?email=${encodeURIComponent(userEmail)}`);
         profiles = await res.json();
         if (profiles.length > 0) {
           const sel = document.getElementById('personFilter');
@@ -490,7 +490,7 @@
     async function loadAssignments() {
       if (!userEmail) return;
       try {
-        const res = await fetch(`http://localhost:3000/gifts?email=${encodeURIComponent(userEmail)}`);
+        const res = await fetch(`/gifts?email=${encodeURIComponent(userEmail)}`);
         const rows = await res.json();
         rows.forEach(r => {
           if (!assignments.has(r.giftId)) assignments.set(r.giftId, []);
@@ -682,7 +682,7 @@
       renderGifts();
 
       try {
-        const res = await fetch('http://localhost:3000/gifts', {
+        const res = await fetch('/gifts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
