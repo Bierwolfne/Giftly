@@ -2,7 +2,9 @@ require('dotenv').config();
 
 const express = require('express');
 const bcrypt  = require('bcrypt');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
+
+const { runAgent } = require('./agent');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -30,7 +32,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     case 'checkout.session.completed':
       if (obj.mode === 'subscription') {
         await dbRun(
-          'UPDATE users SET subscriptionStatus = ? WHERE stripeCustomerId = ?',
+          'UPDATE users SET "subscriptionStatus" = $1 WHERE "stripeCustomerId" = $2',
           ['active', obj.customer]
         ).catch(err => console.error('DB error in webhook:', err));
       }
@@ -39,21 +41,21 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     case 'customer.subscription.created':
     case 'customer.subscription.updated':
       await dbRun(
-        'UPDATE users SET subscriptionStatus = ? WHERE stripeCustomerId = ?',
+        'UPDATE users SET "subscriptionStatus" = $1 WHERE "stripeCustomerId" = $2',
         [obj.status, obj.customer]
       ).catch(err => console.error('DB error in webhook:', err));
       break;
 
     case 'customer.subscription.deleted':
       await dbRun(
-        'UPDATE users SET subscriptionStatus = ? WHERE stripeCustomerId = ?',
+        'UPDATE users SET "subscriptionStatus" = $1 WHERE "stripeCustomerId" = $2',
         ['canceled', obj.customer]
       ).catch(err => console.error('DB error in webhook:', err));
       break;
 
     case 'invoice.payment_failed':
       await dbRun(
-        'UPDATE users SET subscriptionStatus = ? WHERE stripeCustomerId = ?',
+        'UPDATE users SET "subscriptionStatus" = $1 WHERE "stripeCustomerId" = $2',
         ['past_due', obj.customer]
       ).catch(err => console.error('DB error in webhook:', err));
       break;
@@ -65,7 +67,13 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 app.use(express.json());
 
 
-const db = new sqlite3.Database('./giftly.db');
+// Render's managed Postgres requires SSL. rejectUnauthorized:false accepts its
+// certificate chain. Skip SSL for local connections (they're typically non-TLS).
+const isLocalDb = /@(localhost|127\.0\.0\.1)/.test(process.env.DATABASE_URL || '');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: isLocalDb ? false : { rejectUnauthorized: false },
+});
 
 // [id, name, description, price, category, interests, icon, bg, source, url]
 const CATALOG_SEEDS = [
@@ -121,63 +129,66 @@ const CATALOG_SEEDS = [
   [50, 'SKLZ Agility Cone Set with Carry Bag',      '20 disc cones + 4 standard cones + carry bag. For speed training, drills, and kids.',               22,  'sports',  '["Sports"]',                  '🏃', '#F0FCFF', 'Amazon',     'https://www.amazon.com/s?k=sklz+agility+cone+set'],
 ];
 
-db.serialize(() => {
-  db.run(`
+// ── Schema + seed ───────────────────────────────────────────────────────────
+// camelCase identifiers are quoted so Postgres preserves their case (unquoted
+// identifiers fold to lowercase, which would break row-property access).
+async function initDb() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-      email              TEXT    UNIQUE NOT NULL,
-      passwordHash       TEXT    NOT NULL,
-      name               TEXT,
-      stripeCustomerId   TEXT,
-      subscriptionStatus TEXT    DEFAULT 'free',
-      createdAt          TEXT    NOT NULL
+      id                   SERIAL PRIMARY KEY,
+      email                TEXT UNIQUE NOT NULL,
+      "passwordHash"       TEXT NOT NULL,
+      name                 TEXT,
+      "stripeCustomerId"   TEXT,
+      "subscriptionStatus" TEXT DEFAULT 'free',
+      "createdAt"          TEXT NOT NULL
     )
   `);
 
   // Migrations for existing databases
-  db.run(`ALTER TABLE users ADD COLUMN name TEXT`, () => {});
-  db.run(`ALTER TABLE users ADD COLUMN stripeCustomerId TEXT`, () => {});
-  db.run(`ALTER TABLE users ADD COLUMN subscriptionStatus TEXT DEFAULT 'free'`, () => {});
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "stripeCustomerId" TEXT`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "subscriptionStatus" TEXT DEFAULT 'free'`);
 
-  db.run(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS profiles (
-      id           INTEGER PRIMARY KEY AUTOINCREMENT,
-      userEmail    TEXT    NOT NULL,
-      name         TEXT    NOT NULL,
-      relationship TEXT    NOT NULL,
+      id           SERIAL PRIMARY KEY,
+      "userEmail"  TEXT NOT NULL,
+      name         TEXT NOT NULL,
+      relationship TEXT NOT NULL,
       birthday     TEXT,
-      giftBudget   TEXT,
-      createdAt    TEXT    NOT NULL,
-      FOREIGN KEY (userEmail) REFERENCES users(email)
+      "giftBudget" TEXT,
+      "createdAt"  TEXT NOT NULL,
+      FOREIGN KEY ("userEmail") REFERENCES users(email)
     )
   `);
 
-  db.run(`ALTER TABLE profiles ADD COLUMN interests TEXT`, () => {});
+  await pool.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS interests TEXT`);
 
-  db.run(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS gifts (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      userEmail   TEXT    NOT NULL,
-      profileId   INTEGER NOT NULL,
-      profileName TEXT    NOT NULL,
-      giftId      INTEGER NOT NULL,
-      giftName    TEXT    NOT NULL,
-      giftPrice   REAL    NOT NULL,
-      giftSource  TEXT,
-      giftUrl     TEXT,
-      assignedAt  TEXT    NOT NULL,
-      FOREIGN KEY (userEmail)  REFERENCES users(email),
-      FOREIGN KEY (profileId)  REFERENCES profiles(id)
+      id            SERIAL PRIMARY KEY,
+      "userEmail"   TEXT NOT NULL,
+      "profileId"   INTEGER NOT NULL,
+      "profileName" TEXT NOT NULL,
+      "giftId"      INTEGER NOT NULL,
+      "giftName"    TEXT NOT NULL,
+      "giftPrice"   REAL NOT NULL,
+      "giftSource"  TEXT,
+      "giftUrl"     TEXT,
+      "assignedAt"  TEXT NOT NULL,
+      FOREIGN KEY ("userEmail") REFERENCES users(email),
+      FOREIGN KEY ("profileId") REFERENCES profiles(id)
     )
   `);
 
-  db.run(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS gift_catalog (
       id          INTEGER PRIMARY KEY,
-      name        TEXT    NOT NULL,
+      name        TEXT NOT NULL,
       description TEXT,
-      price       REAL    NOT NULL,
-      category    TEXT    NOT NULL,
+      price       REAL NOT NULL,
+      category    TEXT NOT NULL,
       interests   TEXT,
       icon        TEXT,
       bg          TEXT,
@@ -186,33 +197,34 @@ db.serialize(() => {
     )
   `);
 
-  const stmt = db.prepare(
-    'INSERT OR IGNORE INTO gift_catalog (id,name,description,price,category,interests,icon,bg,source,url) VALUES (?,?,?,?,?,?,?,?,?,?)'
+  // Bulk-insert the catalog seeds; existing ids are left untouched.
+  const placeholders = CATALOG_SEEDS
+    .map((_, i) => `(${Array.from({ length: 10 }, (_, j) => `$${i * 10 + j + 1}`).join(',')})`)
+    .join(',');
+  await pool.query(
+    `INSERT INTO gift_catalog (id,name,description,price,category,interests,icon,bg,source,url)
+     VALUES ${placeholders}
+     ON CONFLICT (id) DO NOTHING`,
+    CATALOG_SEEDS.flat()
   );
-  CATALOG_SEEDS.forEach(row => stmt.run(row));
-  stmt.finalize();
-});
+}
 
 // ── DB helpers ────────────────────────────────────────────────────────────────
 
-function dbGet(sql, params) {
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row)));
-  });
+// dbGet → first row (or undefined); dbAll → all rows; dbRun → full result.
+// Inserts that need the new id append `RETURNING id` and read result.rows[0].id.
+async function dbGet(sql, params) {
+  const result = await pool.query(sql, params);
+  return result.rows[0];
 }
 
 function dbRun(sql, params) {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      err ? reject(err) : resolve(this);
-    });
-  });
+  return pool.query(sql, params);
 }
 
-function dbAll(sql, params) {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)));
-  });
+async function dbAll(sql, params) {
+  const result = await pool.query(sql, params);
+  return result.rows;
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -237,14 +249,14 @@ app.post('/signup', async (req, res) => {
   const normalizedEmail = email.toLowerCase().trim();
   const trimmedName     = name.trim();
 
-  const existing = await dbGet('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
+  const existing = await dbGet('SELECT id FROM users WHERE email = $1', [normalizedEmail]);
   if (existing) {
     return res.status(409).json({ error: 'An account with that email already exists.' });
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
   await dbRun(
-    'INSERT INTO users (email, passwordHash, name, createdAt) VALUES (?, ?, ?, ?)',
+    'INSERT INTO users (email, "passwordHash", name, "createdAt") VALUES ($1, $2, $3, $4)',
     [normalizedEmail, passwordHash, trimmedName, new Date().toISOString()]
   );
 
@@ -259,7 +271,7 @@ app.post('/login', async (req, res) => {
   }
 
   const normalizedEmail = email.toLowerCase().trim();
-  const user = await dbGet('SELECT email, passwordHash, name FROM users WHERE email = ?', [normalizedEmail]);
+  const user = await dbGet('SELECT email, "passwordHash", name FROM users WHERE email = $1', [normalizedEmail]);
 
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password.' });
@@ -280,7 +292,7 @@ app.get('/user', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'email is required.' });
 
   const user = await dbGet(
-    'SELECT email, name, subscriptionStatus FROM users WHERE email = ?',
+    'SELECT email, name, "subscriptionStatus" FROM users WHERE email = $1',
     [email.toLowerCase().trim()]
   );
   if (!user) return res.status(404).json({ error: 'User not found.' });
@@ -296,7 +308,7 @@ app.post('/create-checkout-session', async (req, res) => {
   const { userEmail } = req.body;
   if (!userEmail) return res.status(400).json({ error: 'userEmail is required.' });
 
-  const user = await dbGet('SELECT * FROM users WHERE email = ?', [userEmail.toLowerCase().trim()]);
+  const user = await dbGet('SELECT * FROM users WHERE email = $1', [userEmail.toLowerCase().trim()]);
   if (!user) return res.status(404).json({ error: 'User not found.' });
 
   // Create or reuse Stripe customer
@@ -307,7 +319,7 @@ app.post('/create-checkout-session', async (req, res) => {
       name:  user.name || undefined,
     });
     customerId = customer.id;
-    await dbRun('UPDATE users SET stripeCustomerId = ? WHERE email = ?', [customerId, user.email]);
+    await dbRun('UPDATE users SET "stripeCustomerId" = $1 WHERE email = $2', [customerId, user.email]);
   }
 
   const baseUrl = process.env.APP_URL || `http://localhost:${PORT}`;
@@ -346,7 +358,7 @@ app.post('/profiles', async (req, res) => {
     return res.status(400).json({ error: 'userEmail, name, and relationship are required.' });
   }
 
-  const user = await dbGet('SELECT id FROM users WHERE email = ?', [userEmail.toLowerCase().trim()]);
+  const user = await dbGet('SELECT id FROM users WHERE email = $1', [userEmail.toLowerCase().trim()]);
   if (!user) {
     return res.status(404).json({ error: 'User not found.' });
   }
@@ -356,11 +368,11 @@ app.post('/profiles', async (req, res) => {
     : null;
 
   const result = await dbRun(
-    'INSERT INTO profiles (userEmail, name, relationship, birthday, giftBudget, interests, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO profiles ("userEmail", name, relationship, birthday, "giftBudget", interests, "createdAt") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
     [userEmail.toLowerCase().trim(), name.trim(), relationship, birthday || null, giftBudget || null, interestsJson, new Date().toISOString()]
   );
 
-  res.status(201).json({ id: result.lastID, name: name.trim(), relationship, birthday: birthday || null, giftBudget: giftBudget || null, interests: interestsJson });
+  res.status(201).json({ id: result.rows[0].id, name: name.trim(), relationship, birthday: birthday || null, giftBudget: giftBudget || null, interests: interestsJson });
 });
 
 app.get('/profiles', async (req, res) => {
@@ -371,7 +383,7 @@ app.get('/profiles', async (req, res) => {
   }
 
   const rows = await dbAll(
-    'SELECT id, name, relationship, birthday, giftBudget, interests FROM profiles WHERE userEmail = ? ORDER BY createdAt ASC',
+    'SELECT id, name, relationship, birthday, "giftBudget", interests FROM profiles WHERE "userEmail" = $1 ORDER BY "createdAt" ASC',
     [email.toLowerCase().trim()]
   );
 
@@ -387,18 +399,18 @@ app.post('/gifts', async (req, res) => {
     return res.status(400).json({ error: 'userEmail, profileId, giftId, and giftName are required.' });
   }
 
-  const profile = await dbGet('SELECT id FROM profiles WHERE id = ? AND userEmail = ?', [profileId, userEmail.toLowerCase().trim()]);
+  const profile = await dbGet('SELECT id FROM profiles WHERE id = $1 AND "userEmail" = $2', [profileId, userEmail.toLowerCase().trim()]);
   if (!profile) {
     return res.status(404).json({ error: 'Profile not found.' });
   }
 
   const result = await dbRun(
-    `INSERT INTO gifts (userEmail, profileId, profileName, giftId, giftName, giftPrice, giftSource, giftUrl, assignedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO gifts ("userEmail", "profileId", "profileName", "giftId", "giftName", "giftPrice", "giftSource", "giftUrl", "assignedAt")
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
     [userEmail.toLowerCase().trim(), profileId, profileName, giftId, giftName, giftPrice || 0, giftSource || null, giftUrl || null, new Date().toISOString()]
   );
 
-  res.status(201).json({ id: result.lastID, profileId, profileName, giftId, giftName });
+  res.status(201).json({ id: result.rows[0].id, profileId, profileName, giftId, giftName });
 });
 
 app.get('/gifts', async (req, res) => {
@@ -409,7 +421,7 @@ app.get('/gifts', async (req, res) => {
   }
 
   const rows = await dbAll(
-    'SELECT id, profileId, profileName, giftId, giftName, giftPrice, giftSource, giftUrl, assignedAt FROM gifts WHERE userEmail = ? ORDER BY assignedAt ASC',
+    'SELECT id, "profileId", "profileName", "giftId", "giftName", "giftPrice", "giftSource", "giftUrl", "assignedAt" FROM gifts WHERE "userEmail" = $1 ORDER BY "assignedAt" ASC',
     [email.toLowerCase().trim()]
   );
 
@@ -421,7 +433,7 @@ app.get('/gifts', async (req, res) => {
 app.get('/api/gifts', async (req, res) => {
   const { category } = req.query;
   const sql = (category && category !== 'all')
-    ? 'SELECT * FROM gift_catalog WHERE category = ? ORDER BY id'
+    ? 'SELECT * FROM gift_catalog WHERE category = $1 ORDER BY id'
     : 'SELECT * FROM gift_catalog ORDER BY id';
   const params = (category && category !== 'all') ? [category] : [];
 
@@ -439,7 +451,37 @@ app.get('/api/gifts', async (req, res) => {
     url:       r.url,
   })));
 });
-app.use(express.static(__dirname));
-app.listen(PORT, () => {
-  console.log(`Giftly server running at http://localhost:${PORT}`);
+// ── Autonomous agent ────────────────────────────────────────────────────────
+app.post('/agent', async (req, res) => {
+  const { task, maxTokens } = req.body || {};
+
+  if (!task || typeof task !== 'string' || !task.trim()) {
+    return res.status(400).json({ error: 'A non-empty "task" string is required.' });
+  }
+
+  try {
+    const result = await runAgent(task, { maxTokens });
+    res.json(result);
+  } catch (err) {
+    console.error('Agent error:', err.message);
+    const status = /ANTHROPIC_API_KEY/.test(err.message) ? 503 : 500;
+    res.status(status).json({ error: err.message });
+  }
 });
+
+app.use(express.static(__dirname));
+
+// ── Startup: verify the DB connection, build the schema, then listen ──────────
+(async () => {
+  try {
+    await pool.query('SELECT 1');
+    console.log('Connected to PostgreSQL.');
+    await initDb();
+    app.listen(PORT, () => {
+      console.log(`Giftly server running at http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to connect to PostgreSQL:', err.message);
+    process.exit(1);
+  }
+})();
